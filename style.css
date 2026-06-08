@@ -1,518 +1,231 @@
-/* ============================================================
-   TOM LOUVORES — INVB — style.css
-   ============================================================ */
+-- ============================================================
+--  TOM LOUVORES — Inserção de músicas (extraídas do PDF)
+--  Total: 223 músicas  |  nomes verificados, duplicatas fundidas
+--  Sem cifra anotada no PDF: campo de tom = "Orig."
+--  Execute no SQL Editor do Supabase
+-- ============================================================
 
-   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap');
-
-   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-   
-   :root{
-     --black:  #0A0A0A;
-     --black2: #111111;
-     --black3: #1A1A1A;
-     --black4: #242424;
-     --black5: #2E2E2E;
-     --yellow: #FFE000;
-     --yellow2:#FFC800;
-     --gray:   #888;
-     --gray2:  #555;
-     --gray3:  #333;
-     --white:  #FFFFFF;
-     --r: 6px;
-   }
-   
-   body{
-     font-family:'Inter',sans-serif;
-     background:var(--black);
-     color:var(--white);
-     min-height:100vh;
-     overflow-x:hidden;
-   }
-   
-   /* ——— HEADER ——— */
-   .header{
-     background:var(--black);
-     border-bottom:1px solid var(--black4);
-     position:sticky;top:0;z-index:100;
-   }
-   .header-inner{
-     max-width:1280px;margin:0 auto;
-     padding:0 36px;height:64px;
-     display:flex;align-items:center;justify-content:space-between;
-   }
-   .logo{display:flex;align-items:center;gap:12px}
-   .logo-img{
-     height:30px;width:auto;
-     mix-blend-mode:screen;
-   }
-   .logo-wordmark{
-     font-family:'Bebas Neue',sans-serif;
-     font-size:28px;letter-spacing:0.06em;
-     line-height:1;color:var(--white);
-   }
-   .logo-wordmark span{color:var(--yellow)}
-   .logo-sep{width:1px;height:28px;background:var(--black5)}
-   .logo-sub{
-     font-size:10px;font-weight:600;
-     color:var(--yellow);letter-spacing:0.16em;
-     text-transform:uppercase;line-height:1.3;
-   }
-   .header-right{display:flex;align-items:center;gap:10px}
-   
-   .status-pill{
-     display:flex;align-items:center;gap:7px;
-     padding:6px 12px;
-     border:1px solid var(--black5);
-     font-size:11px;font-weight:500;
-     color:var(--gray);letter-spacing:0.04em;
-     text-transform:uppercase;
-     background:var(--black2);
-     border-radius:2px;
-   }
-   .status-pill.ok {color:#4ADE80;border-color:rgba(74,222,128,0.3)}
-   .status-pill.err{color:#F87171;border-color:rgba(248,113,113,0.3)}
-   .dot{
-     width:6px;height:6px;border-radius:50%;
-     background:currentColor;
-     animation:blink 2s ease infinite;flex-shrink:0;
-   }
-   @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-   
-   .btn-add{
-     display:flex;align-items:center;gap:8px;
-     padding:10px 20px;
-     background:var(--yellow);
-     border:none;cursor:pointer;
-     font-family:'Inter',sans-serif;
-     font-size:13px;font-weight:700;
-     color:var(--black);
-     letter-spacing:0.05em;text-transform:uppercase;
-     transition:background 0.15s;
-     border-radius:var(--r);
-   }
-   .btn-add:hover{background:var(--yellow2)}
-   .btn-add:active{transform:scale(0.98)}
-   
-   /* ——— HERO OUTER (full-width background) ——— */
-   .hero-outer{
-     background:url('image.jpg') center 30% / cover no-repeat;
-     position:relative;
-     border-bottom:1px solid var(--black4);
-   }
-   .hero-outer::before{
-     content:'';
-     position:absolute;inset:0;
-     background:rgba(0,0,0,0.76);
-     pointer-events:none;
-   }
-   
-   /* ——— HERO (inner content container) ——— */
-   .hero{
-     max-width:1280px;margin:0 auto;
-     padding:52px 36px 40px;
-     display:grid;grid-template-columns:1fr auto;
-     gap:48px;align-items:end;
-     position:relative;z-index:1;
-   }
-   
-   /* ——— HERO RIGHT COLUMN (brand logo + stats) ——— */
-   .hero-right-col{
-     display:flex;flex-direction:column;
-     align-items:center;gap:20px;
-     align-self:end;
-   }
-   
-   /* ——— BRAND LOGO (golden V in hero) ——— */
-
-   .hero-tag{
-     display:inline-flex;align-items:center;gap:8px;
-     background:var(--yellow);
-     color:var(--black);
-     font-size:10px;font-weight:800;
-     letter-spacing:0.14em;text-transform:uppercase;
-     padding:4px 12px;border-radius:2px;
-     margin-bottom:20px;
-   }
-   .hero-h1{
-     font-family:'Bebas Neue',sans-serif;
-     font-size:clamp(52px,7vw,88px);
-     line-height:0.9;letter-spacing:0.03em;
-     color:var(--white);
-   }
-   .hero-h1 em{color:var(--yellow);font-style:normal}
-   .hero-sub{
-     font-size:14px;font-weight:300;
-     color:var(--gray);margin-top:14px;line-height:1.65;
-   }
-   .hero-stats{
-     display:flex;flex-direction:column;
-     border:1px solid var(--black5);
-     background:rgba(17,17,17,0.85);
-     border-radius:var(--r);
-     overflow:hidden;
-     align-self:stretch;
-     min-width:200px;
-   }
-   .stat-row{
-     padding:18px 24px;
-     display:flex;align-items:baseline;justify-content:space-between;
-     gap:16px;
-     border-bottom:1px solid var(--black4);
-   }
-   .stat-row:last-child{border-bottom:none}
-   .stat-n{
-     font-family:'Bebas Neue',sans-serif;
-     font-size:44px;line-height:1;letter-spacing:0.02em;
-     color:var(--yellow);
-   }
-   .stat-l{
-     font-size:10px;font-weight:600;
-     color:var(--gray2);letter-spacing:0.1em;
-     text-transform:uppercase;
-   }
-   
-   /* ——— TOOLBAR ——— */
-   .toolbar{
-     max-width:1280px;margin:28px auto 0;padding:0 36px;
-     display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-   }
-   .search-wrap{flex:1;min-width:220px;position:relative}
-   .search-ico{
-     position:absolute;left:13px;top:50%;transform:translateY(-50%);
-     color:var(--gray2);pointer-events:none;font-size:15px;
-   }
-   .inp-search{
-     width:100%;
-     background:var(--black2);
-     border:1px solid var(--black5);
-     color:var(--white);
-     padding:11px 14px 11px 38px;
-     border-radius:var(--r);
-     font-family:'Inter',sans-serif;font-size:13px;
-     outline:none;transition:border-color 0.2s;
-   }
-   .inp-search:focus{border-color:var(--yellow)}
-   .inp-search::placeholder{color:var(--gray2)}
-   .sel{
-     background:var(--black2);
-     border:1px solid var(--black5);
-     color:var(--gray);
-     padding:11px 14px;border-radius:var(--r);
-     font-family:'Inter',sans-serif;font-size:13px;
-     outline:none;cursor:pointer;
-     transition:border-color 0.2s;min-width:165px;
-   }
-   .sel:focus{border-color:var(--yellow)}
-   .sel option{background:var(--black2);color:var(--white)}
-   .count-badge{
-     font-size:11px;font-weight:600;
-     color:var(--yellow);
-     background:rgba(255,224,0,0.1);
-     border:1px solid rgba(255,224,0,0.25);
-     padding:5px 12px;border-radius:2px;
-     letter-spacing:0.06em;white-space:nowrap;
-     text-transform:uppercase;
-   }
-   
-   /* ——— GRID ——— */
-   .grid-wrap{max-width:1280px;margin:20px auto 80px;padding:0 36px}
-   .grid{
-     display:grid;
-     grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
-     gap:12px;
-   }
-   
-   /* ——— CARD ——— */
-   .card{
-     background:var(--black2);
-     border:1px solid var(--black4);
-     border-radius:var(--r);
-     padding:22px 22px 18px;
-     display:flex;flex-direction:column;gap:14px;
-     cursor:default;
-     transition:border-color 0.2s,background 0.2s;
-     position:relative;overflow:hidden;
-   }
-   .card::before{
-     content:'';
-     position:absolute;top:0;left:0;right:0;
-     height:2px;background:var(--black4);
-     transition:background 0.2s;
-   }
-   .card:hover{background:var(--black3);border-color:var(--black5)}
-   .card:hover::before{background:var(--yellow)}
-   .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-   .card-acts{display:flex;gap:6px;opacity:0;transition:opacity 0.15s}
-   .card:hover .card-acts{opacity:1}
-   .act-btn{
-     width:30px;height:30px;
-     background:transparent;
-     border:1px solid var(--black5);
-     display:flex;align-items:center;justify-content:center;
-     cursor:pointer;color:var(--gray);
-     transition:all 0.15s;border-radius:4px;font-size:13px;
-   }
-   .act-btn:hover{background:var(--black4);color:var(--white);border-color:var(--gray3)}
-   .act-btn.del:hover{background:rgba(248,113,113,0.1);color:#F87171;border-color:rgba(248,113,113,0.3)}
-   
-   .card-nome{
-     font-size:17px;font-weight:700;line-height:1.25;
-     color:var(--white);letter-spacing:-0.01em;
-   }
-   .card-obs{
-     font-size:12px;color:var(--gray);line-height:1.6;font-weight:300;
-     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-   }
-   
-   /* Tabela de tons dentro do card */
-   .card-tons{
-     display:flex;flex-direction:column;gap:6px;
-   }
-   .card-ton-row{
-     display:flex;align-items:center;justify-content:space-between;
-     gap:8px;
-   }
-   .card-badge{
-     font-family:'Bebas Neue',sans-serif;
-     font-size:20px;letter-spacing:0.04em;
-     line-height:1;color:var(--yellow);
-     background:rgba(255,224,0,0.08);
-     border:1px solid rgba(255,224,0,0.2);
-     padding:3px 10px;
-     border-radius:4px;
-     flex-shrink:0;
-     min-width:48px;
-     text-align:center;
-   }
-   .card-min-label{
-     font-size:10px;font-weight:700;
-     padding:3px 10px;
-     letter-spacing:0.08em;text-transform:uppercase;
-     border:1px solid;border-radius:2px;
-   }
-   
-   .chip-Raphaela{background:rgba(255,224,0,0.1);color:#FFE000;border-color:rgba(255,224,0,0.3)}
-   .chip-Daniela {background:rgba(96,165,250,0.1);color:#60A5FA;border-color:rgba(96,165,250,0.3)}
-   .chip-Cris    {background:rgba(74,222,128,0.1);color:#4ADE80;border-color:rgba(74,222,128,0.3)}
-   .chip-Mirian  {background:rgba(251,146,60,0.1);color:#FB923C;border-color:rgba(251,146,60,0.3)}
-   .chip-Humberto{background:rgba(167,139,250,0.1);color:#A78BFA;border-color:rgba(167,139,250,0.3)}
-   
-   .card-foot{
-     display:flex;align-items:center;justify-content:flex-end;
-     padding-top:10px;border-top:1px solid var(--black4);
-   }
-   .card-date{font-size:10px;color:var(--gray2);font-weight:400;letter-spacing:0.04em}
-   
-   /* ——— STATES ——— */
-   .state-loading,.state-empty{
-     grid-column:1/-1;
-     display:none;flex-direction:column;align-items:center;
-     gap:14px;padding:90px 24px;
-     color:var(--gray);text-align:center;
-   }
-   .state-loading{display:flex}
-   .spinner{
-     width:36px;height:36px;
-     border:2px solid var(--black5);
-     border-top-color:var(--yellow);
-     border-radius:50%;
-     animation:spin 0.7s linear infinite;
-   }
-   @keyframes spin{to{transform:rotate(360deg)}}
-   .empty-sym{
-     font-family:'Bebas Neue',sans-serif;
-     font-size:64px;letter-spacing:0.06em;
-     color:var(--black5);line-height:1;
-   }
-   .empty-ttl{font-size:18px;font-weight:700;color:var(--black5)}
-   .empty-sub{font-size:13px;color:var(--gray2)}
-   
-   /* ——— MODAL ——— */
-   .overlay-bg{
-     position:fixed;inset:0;
-     background:rgba(0,0,0,0.82);
-     display:none;align-items:center;justify-content:center;
-     padding:24px;z-index:200;
-   }
-   .overlay-bg.open{display:flex}
-   .modal{
-     background:var(--black2);
-     border:1px solid var(--black5);
-     width:100%;max-width:500px;
-     border-radius:10px;
-     overflow:hidden;
-     max-height:90vh;
-     display:flex;flex-direction:column;
-   }
-   .modal-hd{
-     padding:24px 24px 20px;
-     display:flex;align-items:center;justify-content:space-between;
-     border-bottom:1px solid var(--black4);
-     flex-shrink:0;
-   }
-   .modal-hd h2{
-     font-family:'Bebas Neue',sans-serif;
-     font-size:26px;letter-spacing:0.06em;color:var(--white);
-   }
-   .modal-close{
-     width:30px;height:30px;
-     background:transparent;border:1px solid var(--black5);
-     color:var(--gray);font-size:14px;cursor:pointer;
-     display:flex;align-items:center;justify-content:center;
-     border-radius:4px;transition:all 0.15s;
-   }
-   .modal-close:hover{background:var(--black4);color:var(--white)}
-   .modal-bd{
-     padding:20px 24px;
-     display:flex;flex-direction:column;gap:16px;
-     overflow-y:auto;
-   }
-   .modal-ft{
-     padding:14px 24px 20px;
-     display:flex;gap:8px;justify-content:flex-end;
-     border-top:1px solid var(--black4);
-     flex-shrink:0;
-   }
-   .flabel{
-     font-size:10px;font-weight:700;color:var(--gray2);
-     letter-spacing:0.12em;text-transform:uppercase;
-     display:block;margin-bottom:7px;
-   }
-   .finput{
-     width:100%;
-     background:var(--black3);border:1px solid var(--black5);
-     color:var(--white);padding:11px 13px;
-     border-radius:var(--r);
-     font-family:'Inter',sans-serif;font-size:13px;
-     outline:none;transition:border-color 0.2s;
-   }
-   .finput:focus{border-color:var(--yellow)}
-   .finput::placeholder{color:var(--gray2)}
-   .finput option{background:var(--black2);color:var(--white)}
-   .ftextarea{resize:vertical;min-height:72px}
-   
-   /* ——— TOM ADD ROW ——— */
-   .tom-add-row{
-     display:grid;
-     grid-template-columns:1fr 1fr auto;
-     gap:8px;
-     align-items:center;
-   }
-   .btn-add-tom{
-     height:42px;width:42px;
-     background:var(--yellow);
-     border:none;cursor:pointer;
-     font-size:22px;font-weight:700;
-     color:var(--black);
-     border-radius:var(--r);
-     display:flex;align-items:center;justify-content:center;
-     transition:background 0.15s;
-     flex-shrink:0;
-   }
-   .btn-add-tom:hover{background:var(--yellow2)}
-   
-   /* ——— TOM LIST (pares adicionados) ——— */
-   .tom-list{
-     display:flex;flex-direction:column;gap:6px;
-     margin-top:10px;
-   }
-   .tom-list-item{
-     display:flex;align-items:center;justify-content:space-between;
-     gap:10px;
-     background:var(--black3);
-     border:1px solid var(--black5);
-     border-radius:var(--r);
-     padding:8px 12px;
-   }
-   .tom-list-info{
-     display:flex;align-items:center;gap:10px;
-   }
-   .tom-list-badge{
-     font-family:'Bebas Neue',sans-serif;
-     font-size:20px;letter-spacing:0.04em;
-     color:var(--yellow);
-     min-width:40px;
-     text-align:center;
-   }
-   .tom-list-min{
-     font-size:11px;font-weight:600;
-     letter-spacing:0.06em;color:var(--gray);
-     text-transform:uppercase;
-   }
-   .tom-list-remove{
-     width:24px;height:24px;
-     background:transparent;
-     border:1px solid var(--black5);
-     color:var(--gray2);
-     font-size:12px;
-     border-radius:4px;
-     cursor:pointer;
-     display:flex;align-items:center;justify-content:center;
-     transition:all 0.15s;
-     flex-shrink:0;
-   }
-   .tom-list-remove:hover{
-     background:rgba(248,113,113,0.1);
-     color:#F87171;
-     border-color:rgba(248,113,113,0.3);
-   }
-   
-   /* ——— BOTÕES MODAL ——— */
-   .btn-cancel{
-     padding:10px 18px;
-     background:transparent;border:1px solid var(--black5);
-     color:var(--gray);font-family:'Inter',sans-serif;
-     font-size:13px;font-weight:500;cursor:pointer;
-     transition:all 0.15s;border-radius:var(--r);
-   }
-   .btn-cancel:hover{background:var(--black4);color:var(--white)}
-   .btn-save{
-     padding:10px 22px;
-     background:var(--yellow);border:none;
-     color:var(--black);font-family:'Inter',sans-serif;
-     font-size:13px;font-weight:800;cursor:pointer;
-     transition:background 0.15s;border-radius:var(--r);
-     letter-spacing:0.04em;text-transform:uppercase;
-   }
-   .btn-save:hover{background:var(--yellow2)}
-   .btn-save:disabled{opacity:0.4;cursor:not-allowed}
-   
-   /* ——— TOAST ——— */
-   .toast{
-     position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
-     background:var(--black3);
-     border:1px solid var(--black5);
-     color:var(--white);padding:12px 24px;
-     font-size:12px;font-weight:600;
-     letter-spacing:0.04em;text-transform:uppercase;
-     border-radius:4px;
-     white-space:nowrap;
-     opacity:0;pointer-events:none;
-     transition:opacity 0.25s;z-index:999;
-   }
-   .toast.show{opacity:1}
-   .toast.err{border-color:rgba(248,113,113,0.4);color:#F87171}
-   
-   /* ——— RESPONSIVE ——— */
-   @media(max-width:700px){
-     .header-inner,.hero,.toolbar,.grid-wrap{padding-left:20px;padding-right:20px}
-     .hero{grid-template-columns:1fr;gap:28px}
-     .hero-right-col{flex-direction:row;align-items:center;justify-content:flex-start;gap:16px;align-self:auto}
-     .hero-stats{flex-direction:row;align-self:auto}
-     .stat-row{border-bottom:none;border-right:1px solid var(--black4);padding:14px 18px}
-     .stat-row:last-child{border-right:none}
-     .stat-n{font-size:32px}
-     .card-acts{opacity:1}
-     .grid{grid-template-columns:1fr}
-     .tom-add-row{grid-template-columns:1fr 1fr auto}
-   }
-   /* — Header mobile — */
-   @media(max-width:480px){
-     .header-inner{padding:0 16px;height:56px}
-     .logo-img{height:26px}
-     .logo-sep{height:22px}
-     .logo-sub{font-size:9px;letter-spacing:0.1em}
-     .status-pill{padding:5px 8px;font-size:10px;gap:5px}
-     #statusTxt{display:none}
-     .btn-add{padding:8px 12px;font-size:12px;letter-spacing:0.02em}
-   }
+INSERT INTO musicas (nome, tom, ministrante) VALUES
+  ('1000 Graus', '[{"tom": "C", "min": "Cris"}]', 'Cris'),
+  ('A Casa é Sua', '[{"tom": "A", "min": "Raphaela"}]', 'Raphaela'),
+  ('A Deus Seja Glória', '[{"tom": "Bm", "min": "Daniela"}]', 'Daniela'),
+  ('A Ele a Glória', '[{"tom": "E", "min": "Raphaela"}, {"tom": "C", "min": "Daniela"}, {"tom": "F#m", "min": "Daniela"}]', 'Daniela, Raphaela'),
+  ('A Honra e a Glória', '[{"tom": "C#m", "min": "Mirian"}, {"tom": "E", "min": "Raphaela"}]', 'Mirian, Raphaela'),
+  ('A Ti Eu Vou Clamar', '[{"tom": "G", "min": "Raphaela"}]', 'Raphaela'),
+  ('A Tua Palavra Escondi', '[{"tom": "A", "min": "Cris"}]', 'Cris'),
+  ('Abra os Olhos do Meu Coração', '[{"tom": "E", "min": "Daniela"}]', 'Daniela'),
+  ('Abraça-me', '[{"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Adorador', '[{"tom": "F", "min": "Raphaela"}, {"tom": "G", "min": "Mirian"}]', 'Mirian, Raphaela'),
+  ('Advogado Fiel', '[{"tom": "D#m", "min": "Cris"}]', 'Cris'),
+  ('Agindo Deus', '[{"tom": "B", "min": "Cris"}]', 'Cris'),
+  ('Agindo Deus Quem Impedirá', '[{"tom": "B", "min": "Cris"}]', 'Cris'),
+  ('Agnus Dei', '[{"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Ah Jesus', '[{"tom": "D", "min": "Cris"}]', 'Cris'),
+  ('Alfa e Ômega', '[{"tom": "D", "min": "Raphaela"}, {"tom": "C", "min": ""}]', 'Raphaela'),
+  ('Alvo Mais Que a Neve', '[{"tom": "Orig.", "min": "Raphaela"}]', 'Raphaela'),
+  ('Além do Rio Azul', '[{"tom": "Bm", "min": "Mirian"}, {"tom": "C", "min": "Daniela"}]', 'Daniela, Mirian'),
+  ('Amo o Senhor', '[{"tom": "E", "min": "Daniela"}, {"tom": "F", "min": ""}]', 'Daniela'),
+  ('Ao Rei dos Reis', '[{"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Ao Único', '[{"tom": "G", "min": "Daniela"}, {"tom": "A", "min": "Cris"}]', 'Cris, Daniela'),
+  ('Aonde a Presença do Senhor', '[{"tom": "Orig.", "min": "Raphaela"}]', 'Raphaela'),
+  ('Aquele Que Está Feliz', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('As Promessas do Pai', '[{"tom": "A", "min": "Cris"}]', 'Cris'),
+  ('Atos 2', '[{"tom": "C#m", "min": "Mirian"}]', 'Mirian'),
+  ('Até Que o Senhor Venha', '[{"tom": "F#", "min": "Daniela"}]', 'Daniela'),
+  ('Bondade de Deus', '[{"tom": "F", "min": "Raphaela"}, {"tom": "E", "min": "Raphaela"}, {"tom": "F#", "min": ""}]', 'Raphaela'),
+  ('Cadeias Quebrar', '[{"tom": "Gm", "min": "Raphaela"}]', 'Raphaela'),
+  ('Caia Fogo', '[{"tom": "F#m", "min": "Mirian"}]', 'Mirian'),
+  ('Caminho no Deserto', '[{"tom": "B", "min": "Daniela"}]', 'Daniela'),
+  ('Canção ao Cordeiro', '[{"tom": "E", "min": "Raphaela"}]', 'Raphaela'),
+  ('Celebre ao Rei', '[{"tom": "C", "min": "Raphaela"}]', 'Raphaela'),
+  ('Clamo Jesus', '[{"tom": "C", "min": "Cris"}]', 'Cris'),
+  ('Com Cristo é Vencer', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Com Muito Louvor', '[{"tom": "G", "min": "Daniela"}, {"tom": "F", "min": "Raphaela"}]', 'Daniela, Raphaela'),
+  ('Consagração', '[{"tom": "E", "min": "Vanessa"}]', 'Vanessa'),
+  ('Deixa', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Derrama Tua Glória', '[{"tom": "F#m", "min": "Daniela"}]', 'Daniela'),
+  ('Deserto', '[{"tom": "G", "min": "Mirian"}, {"tom": "A", "min": "Raphaela"}]', 'Mirian, Raphaela'),
+  ('Deus de Aliança', '[{"tom": "E", "min": "Raphaela"}]', 'Raphaela'),
+  ('Deus de Obras Completas', '[{"tom": "F", "min": "Daniela"}, {"tom": "C", "min": "Cris"}, {"tom": "E", "min": "Raphaela"}, {"tom": "G", "min": "Cris"}]', 'Cris, Daniela, Raphaela'),
+  ('Deus de Promessas', '[{"tom": "C", "min": ""}]', ''),
+  ('Deus dos Deuses', '[{"tom": "A", "min": "Mirian"}]', 'Mirian'),
+  ('Deus Está Aqui', '[{"tom": "G", "min": "Raphaela"}]', 'Raphaela'),
+  ('Deus é Bom', '[{"tom": "D", "min": "Daniela"}]', 'Daniela'),
+  ('Diante de Ti', '[{"tom": "F#", "min": "Raphaela"}, {"tom": "F", "min": "Raphaela"}]', 'Raphaela'),
+  ('Digno de Glória', '[{"tom": "F", "min": "Raphaela"}]', 'Raphaela'),
+  ('Digno é o Senhor', '[{"tom": "E", "min": "Daniela"}, {"tom": "D", "min": "Mirian"}, {"tom": "B", "min": "Raphaela"}]', 'Daniela, Mirian, Raphaela'),
+  ('Dono de Tudo', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Efésios 6', '[{"tom": "Am", "min": "Mirian"}, {"tom": "Bm", "min": "Mirian"}]', 'Mirian'),
+  ('Eis Que Estou à Porta', '[{"tom": "A", "min": "Raphaela"}]', 'Raphaela'),
+  ('Eis-me Aqui', '[{"tom": "B", "min": "Raphaela"}, {"tom": "G", "min": "Daniela"}]', 'Daniela, Raphaela'),
+  ('Ele Vem', '[{"tom": "F#m", "min": "Mirian"}, {"tom": "G", "min": "Cris"}]', 'Cris, Mirian'),
+  ('Ele é Deus', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Ele é Exaltado', '[{"tom": "B", "min": "Daniela"}, {"tom": "D", "min": "Cris"}, {"tom": "C", "min": "Vanessa"}]', 'Cris, Daniela, Vanessa'),
+  ('Ele é o Leão', '[{"tom": "Am", "min": "Raphaela"}]', 'Raphaela'),
+  ('Em Espírito e em Verdade', '[{"tom": "C", "min": "Daniela"}, {"tom": "C#m", "min": "Mirian"}]', 'Daniela, Mirian'),
+  ('Em Nome de Jesus', '[{"tom": "G#", "min": "Raphaela"}, {"tom": "B", "min": "Raphaela"}, {"tom": "A#", "min": "Daniela"}]', 'Daniela, Raphaela'),
+  ('Em Tempos de Guerra', '[{"tom": "A", "min": "Daniela"}, {"tom": "F", "min": "Raphaela"}]', 'Daniela, Raphaela'),
+  ('Em Tua Presença', '[{"tom": "C", "min": "Cris"}]', 'Cris'),
+  ('Escape', '[{"tom": "A", "min": "Daniela"}]', 'Daniela'),
+  ('Escudo', '[{"tom": "C", "min": "Cris"}]', 'Cris'),
+  ('Espírito Enche a Minha Vida', '[{"tom": "F", "min": "Daniela"}, {"tom": "G", "min": "Raphaela"}]', 'Daniela, Raphaela'),
+  ('Estamos de Pé', '[{"tom": "A", "min": ""}, {"tom": "Am", "min": ""}]', ''),
+  ('Estrela da Manhã', '[{"tom": "F", "min": "Daniela"}]', 'Daniela'),
+  ('Eu Creio no Poder da Oração', '[{"tom": "D", "min": "Mirian"}]', 'Mirian'),
+  ('Eu Me Rasgo', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Eu Me Rendo', '[{"tom": "G", "min": "Raphaela"}]', 'Raphaela'),
+  ('Eu Navegarei', '[{"tom": "G", "min": "Daniela"}]', 'Daniela'),
+  ('Eu Não Preciso Ser Reconhecido', '[{"tom": "G", "min": "Raphaela"}]', 'Raphaela'),
+  ('Eu Sou Livre', '[{"tom": "C", "min": ""}]', ''),
+  ('Eu Sou Teu Pai', '[{"tom": "G", "min": "Daniela"}, {"tom": "F#", "min": "Daniela"}]', 'Daniela'),
+  ('Eu Só Quero Tua Presença', '[{"tom": "B", "min": "Raphaela"}, {"tom": "D", "min": "Raphaela"}]', 'Raphaela'),
+  ('Eu Te Agradeço', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Eu Vejo a Glória', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Eu Venho Me Derramar', '[{"tom": "C#", "min": "Raphaela"}, {"tom": "C", "min": "Vanessa"}]', 'Raphaela, Vanessa'),
+  ('Eu Vou Seguir Com Fé', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Faça Morada', '[{"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Fidelidade', '[{"tom": "B", "min": "Raphaela"}, {"tom": "G#m", "min": "Mirian"}, {"tom": "Am", "min": "Mirian"}]', 'Mirian, Raphaela'),
+  ('Fiel a Mim', '[{"tom": "E", "min": "Raphaela"}]', 'Raphaela'),
+  ('Fogo Cai', '[{"tom": "Orig.", "min": "Raphaela"}]', 'Raphaela'),
+  ('Foi Deus', '[{"tom": "F", "min": "Daniela"}]', 'Daniela'),
+  ('Foi na Cruz', '[{"tom": "Orig.", "min": "Raphaela"}]', 'Raphaela'),
+  ('Galileu', '[{"tom": "B", "min": "Daniela"}, {"tom": "A#m", "min": "Daniela"}]', 'Daniela'),
+  ('Glória, Glória Aleluia', '[{"tom": "G", "min": "Cris"}, {"tom": "A", "min": "Cris"}]', 'Cris'),
+  ('Grande é o Senhor', '[{"tom": "D", "min": "Daniela"}]', 'Daniela'),
+  ('Gratidão', '[{"tom": "C", "min": "Daniela"}, {"tom": "C#", "min": "Raphaela"}]', 'Daniela, Raphaela'),
+  ('Haja de Deus', '[{"tom": "E", "min": "Daniela"}, {"tom": "F", "min": ""}]', 'Daniela'),
+  ('Hino da Vitória', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Há Uma Saída', '[{"tom": "A", "min": "Mirian"}]', 'Mirian'),
+  ('Imagine', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Inflama', '[{"tom": "E", "min": ""}]', ''),
+  ('Jardim da Inocência', '[{"tom": "G#", "min": ""}]', ''),
+  ('Jeová Jireh', '[{"tom": "D", "min": "Mirian"}, {"tom": "C", "min": "Daniela"}, {"tom": "A", "min": "Raphaela"}]', 'Daniela, Mirian, Raphaela'),
+  ('Jeová é o Teu Cavaleiro', '[{"tom": "F#", "min": "Daniela"}]', 'Daniela'),
+  ('Jesus (Eu Te Amo)', '[{"tom": "Bm", "min": "Mirian"}]', 'Mirian'),
+  ('Jesus em Tua Presença', '[{"tom": "A", "min": "Raphaela"}, {"tom": "G", "min": "Mirian"}]', 'Mirian, Raphaela'),
+  ('Jesus, Plano Perfeito', '[{"tom": "C", "min": "Mirian"}]', 'Mirian'),
+  ('João Viu', '[{"tom": "G", "min": "Cris"}, {"tom": "F", "min": "Cris"}]', 'Cris'),
+  ('Junto ao Poço', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Já Estou Crucificado Com Cristo', '[{"tom": "A", "min": "Raphaela"}]', 'Raphaela'),
+  ('Já Refulge a Glória Eterna', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Levanta', '[{"tom": "E", "min": "Cris"}]', 'Cris'),
+  ('Leão de Judá', '[{"tom": "Orig.", "min": "Raphaela"}]', 'Raphaela'),
+  ('Liberta-me', '[{"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Lindo Momento', '[{"tom": "A", "min": "Daniela"}]', 'Daniela'),
+  ('Louvor e Glória', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Lugar da Adoração', '[{"tom": "G", "min": "Mirian"}]', 'Mirian'),
+  ('Lugar de Adoração', '[{"tom": "G", "min": "Daniela"}, {"tom": "A", "min": "Daniela"}]', 'Daniela'),
+  ('Lugar Secreto', '[{"tom": "Gm", "min": "Mirian"}]', 'Mirian'),
+  ('Lugares Altos', '[{"tom": "F#", "min": "Mirian"}]', 'Mirian'),
+  ('Manancial', '[{"tom": "F", "min": "Daniela"}]', 'Daniela'),
+  ('Marca da Promessa', '[{"tom": "Em", "min": "Daniela"}]', 'Daniela'),
+  ('Me Atraiu', '[{"tom": "A#", "min": "Daniela"}, {"tom": "C", "min": "Raphaela"}]', 'Daniela, Raphaela'),
+  ('Meu Alvo', '[{"tom": "A#", "min": "Daniela"}]', 'Daniela'),
+  ('Meu Tributo', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Minha Benção', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Morrer Pra Viver', '[{"tom": "F", "min": "Daniela"}]', 'Daniela'),
+  ('Muda Minha Vida, Muda Minha Sorte', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Muito Mais de Deus', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Na Unção de Deus', '[{"tom": "B", "min": "Raphaela"}, {"tom": "A", "min": "Mirian"}]', 'Mirian, Raphaela'),
+  ('Nada Além do Sangue', '[{"tom": "B", "min": "Daniela"}]', 'Daniela'),
+  ('Nada Mais', '[{"tom": "A#", "min": "Daniela"}, {"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Nada Pode Calar Um Adorador', '[{"tom": "E", "min": "Mirian"}]', 'Mirian'),
+  ('No Dia de Pentecoste', '[{"tom": "C", "min": "Cris"}]', 'Cris'),
+  ('Nos Braços do Pai', '[{"tom": "F#", "min": "Daniela"}]', 'Daniela'),
+  ('Nunca Pare de Lutar', '[{"tom": "G", "min": ""}, {"tom": "A", "min": "Mirian"}]', 'Mirian'),
+  ('Não Há Deus Como Tu', '[{"tom": "A", "min": "Raphaela"}]', 'Raphaela'),
+  ('Não Me Envergonharei', '[{"tom": "G", "min": "Raphaela"}]', 'Raphaela'),
+  ('Não Temas', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('O Amigo', '[{"tom": "C", "min": "Cris"}]', 'Cris'),
+  ('O Crente Cheio da Unção', '[{"tom": "C#", "min": "Cris"}]', 'Cris'),
+  ('O Espírito de Deus Está Aqui', '[{"tom": "F", "min": "Daniela"}]', 'Daniela'),
+  ('O Fogo Arderá', '[{"tom": "Am", "min": "Raphaela"}, {"tom": "B", "min": "Raphaela"}, {"tom": "C", "min": "Daniela"}]', 'Daniela, Raphaela'),
+  ('O Medo Não Vai Me Parar', '[{"tom": "Gm", "min": "Raphaela"}, {"tom": "A#", "min": "Raphaela"}]', 'Raphaela'),
+  ('O Nosso General é Cristo', '[{"tom": "Cm", "min": "Cris"}]', 'Cris'),
+  ('O Que Tua Glória Faz', '[{"tom": "Dm", "min": "Mirian"}]', 'Mirian'),
+  ('O Rei Está Voltando', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Oceanos', '[{"tom": "A#", "min": "Mirian"}]', 'Mirian'),
+  ('Oh Quão Lindo Esse Nome É', '[{"tom": "A", "min": "Daniela"}]', 'Daniela'),
+  ('Onde o Fogo Não Apaga', '[{"tom": "F", "min": "Cris"}]', 'Cris'),
+  ('Os Que Confiam no Senhor', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Os Sonhos de Deus', '[{"tom": "D", "min": ""}]', ''),
+  ('Ousado Amor', '[{"tom": "F", "min": ""}]', ''),
+  ('Ouve-se Um Júbilo', '[{"tom": "Am", "min": "Raphaela"}]', 'Raphaela'),
+  ('Para Que Entre o Rei', '[{"tom": "Am", "min": "Daniela"}]', 'Daniela'),
+  ('Perto Quero Estar', '[{"tom": "E", "min": "Raphaela"}]', 'Raphaela'),
+  ('Pode Morar Aqui', '[{"tom": "F", "min": "Mirian"}]', 'Mirian'),
+  ('Poder da Oração', '[{"tom": "D", "min": "Cris"}]', 'Cris'),
+  ('Poderoso Deus', '[{"tom": "E", "min": "Daniela"}, {"tom": "F", "min": "Daniela"}, {"tom": "D", "min": "Daniela"}]', 'Daniela'),
+  ('Poderoso Esse Nome É', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Poderoso é o Senhor Nosso Deus', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Por Causa Dele', '[{"tom": "A", "min": "Raphaela"}]', 'Raphaela'),
+  ('Por Onde Eu For a Tua Benção', '[{"tom": "A", "min": "Daniela"}]', 'Daniela'),
+  ('Porque Ele Vive', '[{"tom": "D", "min": "Vanessa"}]', 'Vanessa'),
+  ('Posso Clamar', '[{"tom": "D#", "min": "Raphaela"}]', 'Raphaela'),
+  ('Pra Sempre', '[{"tom": "B", "min": "Daniela"}]', 'Daniela'),
+  ('Pra Te Adorar, Ó Rei', '[{"tom": "C#m", "min": "Mirian"}]', 'Mirian'),
+  ('Primeira Essência', '[{"tom": "G#", "min": "Cris"}]', 'Cris'),
+  ('Quando Eu Cheguei Aqui', '[{"tom": "C", "min": "Cris"}]', 'Cris'),
+  ('Quando Eu Chorar', '[{"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Quando o Vento Soprar', '[{"tom": "D", "min": "Raphaela"}]', 'Raphaela'),
+  ('Que Ele Cresça', '[{"tom": "D", "min": "Daniela"}]', 'Daniela'),
+  ('Quem Tem Ouvidos Ouça', '[{"tom": "Orig.", "min": "Raphaela"}]', 'Raphaela'),
+  ('Quem é Esse', '[{"tom": "C#", "min": "Raphaela"}, {"tom": "A#", "min": "Daniela"}, {"tom": "C", "min": "Raphaela"}, {"tom": "B", "min": "Raphaela"}, {"tom": "Bm", "min": "Daniela"}, {"tom": "A", "min": "Daniela"}]', 'Daniela, Raphaela'),
+  ('Queremos o Teu Nome Engrandecer', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Quão Formoso És', '[{"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Quão Grande é o Meu Deus', '[{"tom": "F", "min": "Raphaela"}, {"tom": "C", "min": "Daniela"}]', 'Daniela, Raphaela'),
+  ('Quão Lindo', '[{"tom": "A", "min": "Cris"}]', 'Cris'),
+  ('Reacende a Chama', '[{"tom": "Am", "min": "Raphaela"}, {"tom": "Bm", "min": "Daniela"}, {"tom": "G", "min": "Daniela"}]', 'Daniela, Raphaela'),
+  ('Rendido Estou', '[{"tom": "A#", "min": "Mirian"}]', 'Mirian'),
+  ('Sai da Tua Tenda', '[{"tom": "E", "min": "Cris"}]', 'Cris'),
+  ('Santo Espírito', '[{"tom": "C", "min": "Mirian"}]', 'Mirian'),
+  ('Santo Espírito És Bem-Vindo Aqui', '[{"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Santo Pra Sempre', '[{"tom": "D", "min": "Mirian"}, {"tom": "E", "min": "Raphaela"}, {"tom": "A", "min": "Daniela"}]', 'Daniela, Mirian, Raphaela'),
+  ('Se Deus Fizer', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Se Eu Me Humilhar', '[{"tom": "Em", "min": "Daniela"}, {"tom": "F", "min": "Daniela"}, {"tom": "G", "min": "Daniela"}]', 'Daniela'),
+  ('Se Não For Pra Te Adorar', '[{"tom": "D", "min": "Mirian"}, {"tom": "E", "min": "Vanessa"}]', 'Mirian, Vanessa'),
+  ('Se Não Te Ouvir', '[{"tom": "A#", "min": "Raphaela"}, {"tom": "C", "min": "Cris"}]', 'Cris, Raphaela'),
+  ('Se o Sol Se Pôr', '[{"tom": "G", "min": "Raphaela"}]', 'Raphaela'),
+  ('Segura na Mão de Deus', '[{"tom": "C", "min": "Cris"}]', 'Cris'),
+  ('Senhor e Rei', '[{"tom": "D", "min": "Mirian"}, {"tom": "A", "min": "Daniela"}]', 'Daniela, Mirian'),
+  ('Senhor, Tu És Bom', '[{"tom": "D", "min": "Raphaela"}]', 'Raphaela'),
+  ('Ser Conhecido', '[{"tom": "E", "min": "Daniela"}]', 'Daniela'),
+  ('Seu Sangue', '[{"tom": "A", "min": "Daniela"}]', 'Daniela'),
+  ('Sobre as Águas', '[{"tom": "G", "min": "Raphaela"}]', 'Raphaela'),
+  ('Sobre o Vale dos Ossos Secos', '[{"tom": "G", "min": "Daniela"}]', 'Daniela'),
+  ('Solta o Cabo da Nau', '[{"tom": "D", "min": "Cris"}, {"tom": "F", "min": "Cris"}]', 'Cris'),
+  ('Sopra Espírito de Deus Neste Lugar', '[{"tom": "G", "min": "Daniela"}, {"tom": "Em", "min": "Cris"}]', 'Cris, Daniela'),
+  ('Sou Casa', '[{"tom": "C", "min": "Raphaela"}, {"tom": "A", "min": "Raphaela"}]', 'Raphaela'),
+  ('Sou Um Milagre', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Só Tu És Santo', '[{"tom": "A", "min": "Daniela"}]', 'Daniela'),
+  ('Te Adorar é o Que Me Sustenta de Pé', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Te Agradeço', '[{"tom": "G", "min": "Vanessa"}]', 'Vanessa'),
+  ('Te Alegrar', '[{"tom": "E", "min": "Mirian"}]', 'Mirian'),
+  ('Terremoto', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Teu Amor Não Falha', '[{"tom": "B", "min": "Daniela"}, {"tom": "Am", "min": "Raphaela"}]', 'Daniela, Raphaela'),
+  ('Toda a Sorte de Bençãos', '[{"tom": "C", "min": "Daniela"}]', 'Daniela'),
+  ('Todavia Me Alegrarei', '[{"tom": "Orig.", "min": ""}]', ''),
+  ('Toque no Altar', '[{"tom": "Orig.", "min": "Mirian"}]', 'Mirian'),
+  ('Totalidade da Promessa', '[{"tom": "F", "min": "Daniela"}]', 'Daniela'),
+  ('Tu És', '[{"tom": "C#", "min": "Raphaela"}, {"tom": "B", "min": "Raphaela"}]', 'Raphaela'),
+  ('Tu És Bom', '[{"tom": "D", "min": "Daniela"}]', 'Daniela'),
+  ('Tu És Fiel Senhor', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Tudo é Perda', '[{"tom": "A#", "min": "Daniela"}, {"tom": "C#", "min": "Raphaela"}]', 'Daniela, Raphaela'),
+  ('Um Novo Dia', '[{"tom": "F", "min": "Daniela"}]', 'Daniela'),
+  ('Vale de Ossos Secos', '[{"tom": "Em", "min": "Cris"}, {"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Vem Com Josué Lutar em Jericó', '[{"tom": "Am", "min": "Raphaela"}]', 'Raphaela'),
+  ('Vem Com Teu Fogo', '[{"tom": "Gm", "min": "Raphaela"}]', 'Raphaela'),
+  ('Vem Me Buscar', '[{"tom": "Bm", "min": "Mirian"}, {"tom": "C", "min": "Daniela"}]', 'Daniela, Mirian'),
+  ('Vem, Jesus', '[{"tom": "B", "min": "Raphaela"}]', 'Raphaela'),
+  ('Vencendo Vem Jesus', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Vim Para Adorar-Te', '[{"tom": "A", "min": "Raphaela"}, {"tom": "G", "min": "Raphaela"}]', 'Raphaela'),
+  ('Vitorioso És', '[{"tom": "F", "min": "Mirian"}, {"tom": "G", "min": "Raphaela"}]', 'Mirian, Raphaela'),
+  ('Vitória no Deserto', '[{"tom": "D", "min": "Raphaela"}, {"tom": "F", "min": "Raphaela"}]', 'Raphaela'),
+  ('Vou Deixar na Cruz', '[{"tom": "Orig.", "min": "Daniela"}]', 'Daniela'),
+  ('Vou Seguir', '[{"tom": "G", "min": "Cris"}]', 'Cris'),
+  ('Vou Te Alegrar', '[{"tom": "C", "min": "Raphaela"}]', 'Raphaela'),
+  ('Yahweh', '[{"tom": "Am", "min": "Daniela"}]', 'Daniela'),
+  ('Águas Purificadoras', '[{"tom": "B", "min": "Daniela"}]', 'Daniela'),
+  ('É Ele', '[{"tom": "B", "min": "Raphaela"}, {"tom": "F#", "min": "Daniela"}]', 'Daniela, Raphaela'),
+  ('Óleo de Alegria', '[{"tom": "E", "min": "Daniela"}]', 'Daniela'),
+  ('Última Chance', '[{"tom": "D", "min": "Mirian"}]', 'Mirian');
