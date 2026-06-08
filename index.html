@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="read-only">
 
 <!-- HEADER -->
 <header class="header">
@@ -24,7 +24,11 @@
         <span class="dot"></span>
         <span id="statusTxt">Conectando</span>
       </div>
-      <button class="btn-add" onclick="abrirModal()">+ Nova Música</button>
+      <!-- shown when logged out -->
+      <button class="btn-add" id="btnLoginShow" onclick="abrirLogin()" style="display:none">🔒 Entrar</button>
+      <!-- shown when logged in (admin) -->
+      <button class="btn-add" id="btnNovaMusica" onclick="abrirModal()" style="display:none">+ Nova Música</button>
+      <button class="btn-logout" id="btnLogout" onclick="logout()" style="display:none">Sair</button>
     </div>
   </div>
 </header>
@@ -38,7 +42,6 @@
       <p class="hero-sub">Músicas, tons e ministrantes da INVB em um só lugar.</p>
     </div>
     <div class="hero-right-col">
-
       <div class="hero-stats">
         <div class="stat-row">
           <span class="stat-n" id="totalMusicas">0</span>
@@ -89,7 +92,7 @@
   </div>
 </div>
 
-<!-- MODAL -->
+<!-- MODAL MÚSICA -->
 <div class="overlay-bg" id="overlay" onclick="fecharFora(event)">
   <div class="modal" id="modal">
     <div class="modal-hd">
@@ -97,14 +100,10 @@
       <button class="modal-close" onclick="fecharModal()">✕</button>
     </div>
     <div class="modal-bd">
-
-      <!-- Nome -->
       <div>
         <label class="flabel">Nome da música</label>
         <input type="text" id="fNome" class="finput" placeholder="Ex: Oceanos"/>
       </div>
-
-      <!-- Adicionar tom + ministrante -->
       <div>
         <label class="flabel">Tons e Ministrantes</label>
         <div class="tom-add-row">
@@ -124,20 +123,40 @@
           </select>
           <button type="button" class="btn-add-tom" onclick="adicionarTomMin()">+</button>
         </div>
-        <!-- Lista de pares adicionados -->
         <div class="tom-list" id="tomList"></div>
       </div>
-
-      <!-- Observações -->
       <div>
         <label class="flabel">Observações</label>
         <textarea id="fObs" class="finput ftextarea" placeholder="Link do YouTube, notas, etc."></textarea>
       </div>
-
     </div>
     <div class="modal-ft">
       <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
       <button class="btn-save" id="btnSalvar" onclick="salvar()">SALVAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="loginOverlay" onclick="loginFecharFora(event)">
+  <div class="login-box">
+    <div>
+      <h2>ÁREA ADMIN</h2>
+      <p class="login-sub">Acesso restrito para edição do repertório.</p>
+    </div>
+    <div>
+      <label>Usuário</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="username" />
+    </div>
+    <div>
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') tentarLogin()" />
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-actions">
+      <button class="btn-login-cancel" onclick="fecharLogin()">Cancelar</button>
+      <button class="btn-login-submit" onclick="tentarLogin()">ENTRAR</button>
     </div>
   </div>
 </div>

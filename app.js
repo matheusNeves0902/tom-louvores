@@ -6,10 +6,12 @@ const URL_BASE = CONFIG.SUPABASE_URL;
 const KEY      = CONFIG.SUPABASE_KEY;
 const TABLE    = CONFIG.TABLE_NAME;
 
+// ── Credenciais admin (client-side) ──────────────────────────
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "louvor123";
+
 let musicas    = [];
 let editandoId = null;
-
-// pares ativos no modal: [{tom, ministrante}, ...]
 let tomMinList = [];
 
 const CHIP_CLASS = {
@@ -20,9 +22,67 @@ const CHIP_CLASS = {
   "Pr. Humberto":"chip-Humberto",
 };
 
-// ——— Serialização ———
-// No banco: campo "tom" guarda JSON string  → '[{"tom":"G","min":"Raphaela"},...]'
-// Campo "ministrante" não é mais usado, fica vazio para compatibilidade.
+// ============================================================
+//  AUTH — Login / Logout
+// ============================================================
+
+function isAdmin() {
+  return sessionStorage.getItem("tl_admin") === "1";
+}
+
+function aplicarEstadoAuth() {
+  const admin = isAdmin();
+  // body class controla visibilidade dos botões de edição via CSS
+  document.body.classList.toggle("read-only", !admin);
+
+  document.getElementById("btnLoginShow").style.display  = admin ? "none"  : "";
+  document.getElementById("btnNovaMusica").style.display = admin ? ""      : "none";
+  document.getElementById("btnLogout").style.display     = admin ? ""      : "none";
+}
+
+function abrirLogin() {
+  document.getElementById("loginUser").value = "";
+  document.getElementById("loginPass").value = "";
+  document.getElementById("loginError").textContent = "";
+  document.getElementById("loginOverlay").classList.add("open");
+  setTimeout(() => document.getElementById("loginUser").focus(), 80);
+}
+
+function fecharLogin() {
+  document.getElementById("loginOverlay").classList.remove("open");
+}
+
+function loginFecharFora(e) {
+  if (e.target.id === "loginOverlay") fecharLogin();
+}
+
+function tentarLogin() {
+  const user = document.getElementById("loginUser").value.trim();
+  const pass = document.getElementById("loginPass").value;
+
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    sessionStorage.setItem("tl_admin", "1");
+    fecharLogin();
+    aplicarEstadoAuth();
+    toast("Bem-vindo, admin ✓");
+    render(musicas); // re-renderiza com botões de edição visíveis
+  } else {
+    document.getElementById("loginError").textContent = "Usuário ou senha incorretos.";
+    document.getElementById("loginPass").value = "";
+    document.getElementById("loginPass").focus();
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem("tl_admin");
+  aplicarEstadoAuth();
+  toast("Sessão encerrada.");
+  render(musicas); // re-renderiza sem botões de edição
+}
+
+// ============================================================
+//  Serialização
+// ============================================================
 
 function serializarPares(lista) {
   return JSON.stringify(lista);
@@ -30,14 +90,15 @@ function serializarPares(lista) {
 
 function deserializarPares(str) {
   if (!str) return [];
-  // Suporte ao formato antigo (string simples "G" ou "G, D")
   if (!str.startsWith("[")) {
     return str.split(",").map(t => ({ tom: t.trim(), min: "" })).filter(x => x.tom);
   }
   try { return JSON.parse(str); } catch { return []; }
 }
 
-// ——— API ———
+// ============================================================
+//  API
+// ============================================================
 
 async function req(path, opts = {}) {
   const r = await fetch(`${URL_BASE}/rest/v1/${path}`, {
@@ -72,6 +133,8 @@ async function carregar() {
 }
 
 async function salvar() {
+  if (!isAdmin()) { toast("Faça login para editar.", true); return; }
+
   const nome = document.getElementById("fNome").value.trim();
   const obs  = document.getElementById("fObs").value.trim();
 
@@ -81,7 +144,6 @@ async function salvar() {
   const btn = document.getElementById("btnSalvar");
   btn.disabled = true; btn.textContent = "Salvando...";
 
-  // tom = JSON string com pares; ministrante = lista simples para compatibilidade nos filtros
   const tomStr = serializarPares(tomMinList);
   const minStr = [...new Set(tomMinList.map(p => p.min).filter(Boolean))].join(", ");
 
@@ -111,6 +173,7 @@ async function salvar() {
 }
 
 async function excluir(id) {
+  if (!isAdmin()) { toast("Faça login para excluir.", true); return; }
   if (!confirm("Excluir esta música?")) return;
   try {
     await req(`${TABLE}?id=eq.${id}`, { method: "DELETE" });
@@ -121,18 +184,17 @@ async function excluir(id) {
   }
 }
 
-// ——— Tom+Min no modal ———
+// ============================================================
+//  Tom + Min no modal
+// ============================================================
 
 function adicionarTomMin() {
   const tom = document.getElementById("fTom").value;
   const min = document.getElementById("fMin").value;
   if (!tom || !min) { toast("Selecione tom e ministrante antes de adicionar.", true); return; }
-
-  // Não permite duplicar o mesmo tom
   if (tomMinList.find(p => p.tom === tom)) {
     toast(`Tom ${tom} já foi adicionado.`, true); return;
   }
-
   tomMinList.push({ tom, min });
   document.getElementById("fTom").value = "";
   document.getElementById("fMin").value = "";
@@ -161,7 +223,9 @@ function renderTomList() {
   });
 }
 
-// ——— Render cards ———
+// ============================================================
+//  Render cards
+// ============================================================
 
 function render(lista) {
   const grid  = document.getElementById("grid");
@@ -180,11 +244,12 @@ function render(lista) {
   if (!lista.length) { empty.style.display = "flex"; return; }
   empty.style.display = "none";
 
+  const admin = isAdmin();
+
   lista.forEach(m => {
     const pares = deserializarPares(m.tom);
     const data  = m.criado_em ? new Date(m.criado_em).toLocaleDateString("pt-BR") : "";
 
-    // Linhas tom · ministrante
     const tonsHTML = pares.map(p => {
       const chip = CHIP_CLASS[p.min] || "";
       return `
@@ -195,14 +260,17 @@ function render(lista) {
     }).join("") || `<div class="card-ton-row"><span class="card-badge">${esc(m.tom)}</span></div>`;
 
     const div = document.createElement("div");
-    div.className = "card";
+    div.className = "card" + (admin ? " card-editable" : "");
+    if (admin) div.onclick = () => editar(m.id);
+
+    const delBtn = admin
+      ? `<button class="act-btn del" title="Excluir" onclick="event.stopPropagation();excluir('${m.id}')">✕</button>`
+      : "";
+
     div.innerHTML = `
       <div class="card-head">
         <p class="card-nome">${esc(m.nome)}</p>
-        <div class="card-acts">
-          <button class="act-btn"     title="Editar"  onclick="editar('${m.id}')">✏</button>
-          <button class="act-btn del" title="Excluir" onclick="excluir('${m.id}')">✕</button>
-        </div>
+        ${delBtn}
       </div>
       <div class="card-tons">${tonsHTML}</div>
       ${m.observacoes ? `<p class="card-obs">${esc(m.observacoes)}</p>` : ""}
@@ -211,7 +279,9 @@ function render(lista) {
   });
 }
 
-// ——— Filtros ———
+// ============================================================
+//  Filtros
+// ============================================================
 
 function filtrar() {
   const b = document.getElementById("busca").value.toLowerCase();
@@ -245,14 +315,17 @@ function atualizarFiltroTons() {
     tons.map(t => `<option${t === cur ? " selected" : ""}>${t}</option>`).join("");
 }
 
-// ——— Modal ———
+// ============================================================
+//  Modal música
+// ============================================================
 
 function abrirModal(m = null) {
+  if (!isAdmin()) { abrirLogin(); return; }
   editandoId  = m ? m.id : null;
   tomMinList  = m ? deserializarPares(m.tom) : [];
 
   document.getElementById("modalTitulo").textContent = m ? "EDITAR MÚSICA" : "NOVA MÚSICA";
-  document.getElementById("fNome").value = m?.nome       || "";
+  document.getElementById("fNome").value = m?.nome        || "";
   document.getElementById("fObs").value  = m?.observacoes || "";
   document.getElementById("fTom").value  = "";
   document.getElementById("fMin").value  = "";
@@ -278,7 +351,9 @@ function fecharFora(e) {
   if (e.target.id === "overlay") fecharModal();
 }
 
-// ——— Utils ———
+// ============================================================
+//  Utils
+// ============================================================
 
 function setStatus(ok) {
   const p = document.getElementById("statusPill");
@@ -298,6 +373,13 @@ function esc(s = "") {
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-document.addEventListener("keydown", e => { if (e.key === "Escape") fecharModal(); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    fecharModal();
+    fecharLogin();
+  }
+});
 
+// ── Init ──────────────────────────────────────────────────────
+aplicarEstadoAuth();
 carregar();
