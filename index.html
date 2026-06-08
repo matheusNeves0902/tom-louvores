@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Louvores — Gestão de Repertório</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Background decorativo -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">♪</div>
+        <div>
+          <span class="logo-title">Louvores</span>
+          <span class="logo-sub">Gestão de Repertório</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="status-badge" id="statusBadge">
+          <span class="status-dot"></span>
+          Conectando...
+        </span>
+        <button class="btn-primary" id="btnAdicionar" onclick="abrirModal()">
+          + Nova Música
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-num" id="totalMusicas">0</span>
+      <span class="stat-label">Músicas</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-num" id="totalMinistrantes">5</span>
+      <span class="stat-label">Ministrantes</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-num" id="totalTons">0</span>
+      <span class="stat-label">Tons diferentes</span>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-wrap">
+    <div class="filtros">
+      <input type="text" id="busca" class="input-busca" placeholder="🔍  Buscar música..." oninput="filtrar()" />
+      <select id="filtroMinistrante" class="select-filtro" onchange="filtrar()">
+        <option value="">Todos os ministrantes</option>
+        <option value="Raphaela">Raphaela</option>
+        <option value="Daniela">Daniela</option>
+        <option value="Cris">Cris</option>
+        <option value="Mirian">Mirian</option>
+        <option value="Pr. Humberto">Pr. Humberto</option>
+      </select>
+      <select id="filtroTom" class="select-filtro" onchange="filtrar()">
+        <option value="">Todos os tons</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Grid de músicas -->
+  <main class="main-content">
+    <div class="cards-grid" id="cardsGrid">
+      <!-- Cards injetados via JS -->
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="empty-icon">🎵</div>
+      <p class="empty-title">Nenhuma música encontrada</p>
+      <p class="empty-sub">Adicione a primeira música clicando no botão acima.</p>
+    </div>
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <p>Carregando músicas...</p>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="fecharModalFora(event)">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Nova Música</h2>
+        <button class="modal-close" onclick="fecharModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Nome da Música *</label>
+          <input type="text" id="inputNome" class="form-input" placeholder="Ex: Oceanos" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tom *</label>
+            <select id="inputTom" class="form-input">
+              <option value="">Selecione o tom</option>
+              <option>C</option><option>C#</option><option>D</option>
+              <option>D#</option><option>E</option><option>F</option>
+              <option>F#</option><option>G</option><option>G#</option>
+              <option>A</option><option>A#</option><option>B</option>
+              <option>Cm</option><option>C#m</option><option>Dm</option>
+              <option>D#m</option><option>Em</option><option>Fm</option>
+              <option>F#m</option><option>Gm</option><option>G#m</option>
+              <option>Am</option><option>A#m</option><option>Bm</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ministrante *</label>
+            <select id="inputMinistrante" class="form-input">
+              <option value="">Selecione</option>
+              <option>Raphaela</option>
+              <option>Daniela</option>
+              <option>Cris</option>
+              <option>Mirian</option>
+              <option>Pr. Humberto</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Observações</label>
+          <textarea id="inputObs" class="form-input form-textarea" placeholder="Informações adicionais, link do YouTube, etc."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="fecharModal()">Cancelar</button>
+        <button class="btn-primary" id="btnSalvar" onclick="salvarMusica()">Salvar Música</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
