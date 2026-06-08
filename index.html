@@ -3,150 +3,149 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Louvores — Gestão de Repertório</title>
+  <title>Tom Louvores — INVB</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- Background decorativo -->
-  <div class="bg-orbs">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <img src="logo2.png" alt="Nova Vida Botafogo" class="logo-img" />
+      <div class="logo-sep"></div>
+      <span class="logo-sub">Tom<br>Louvores</span>
+    </div>
+    <div class="header-right">
+      <div class="status-pill" id="statusPill">
+        <span class="dot"></span>
+        <span id="statusTxt">Conectando</span>
+      </div>
+      <button class="btn-add" onclick="abrirModal()">+ Nova Música</button>
+    </div>
   </div>
+</header>
 
-  <!-- Header -->
-  <header class="header">
-    <div class="header-inner">
-      <div class="logo">
-        <div class="logo-icon">♪</div>
-        <div>
-          <span class="logo-title">Louvores</span>
-          <span class="logo-sub">Gestão de Repertório</span>
+<!-- HERO -->
+<section class="hero-outer">
+  <div class="hero">
+    <div>
+      <div class="hero-tag">Botafogo · RJ</div>
+      <h1 class="hero-h1">NOSSO<br><em>REPERTÓRIO</em></h1>
+      <p class="hero-sub">Músicas, tons e ministrantes da INVB em um só lugar.</p>
+    </div>
+    <div class="hero-right-col">
+
+      <div class="hero-stats">
+        <div class="stat-row">
+          <span class="stat-n" id="totalMusicas">0</span>
+          <span class="stat-l">Músicas</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-n" id="totalTons">0</span>
+          <span class="stat-l">Tons</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-n">5</span>
+          <span class="stat-l">Ministr.</span>
         </div>
       </div>
-      <div class="header-actions">
-        <span class="status-badge" id="statusBadge">
-          <span class="status-dot"></span>
-          Conectando...
-        </span>
-        <button class="btn-primary" id="btnAdicionar" onclick="abrirModal()">
-          + Nova Música
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Stats bar -->
-  <div class="stats-bar">
-    <div class="stat-item">
-      <span class="stat-num" id="totalMusicas">0</span>
-      <span class="stat-label">Músicas</span>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat-item">
-      <span class="stat-num" id="totalMinistrantes">5</span>
-      <span class="stat-label">Ministrantes</span>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat-item">
-      <span class="stat-num" id="totalTons">0</span>
-      <span class="stat-label">Tons diferentes</span>
     </div>
   </div>
+</section>
 
-  <!-- Filtros -->
-  <div class="filtros-wrap">
-    <div class="filtros">
-      <input type="text" id="busca" class="input-busca" placeholder="🔍  Buscar música..." oninput="filtrar()" />
-      <select id="filtroMinistrante" class="select-filtro" onchange="filtrar()">
-        <option value="">Todos os ministrantes</option>
-        <option value="Raphaela">Raphaela</option>
-        <option value="Daniela">Daniela</option>
-        <option value="Cris">Cris</option>
-        <option value="Mirian">Mirian</option>
-        <option value="Pr. Humberto">Pr. Humberto</option>
-      </select>
-      <select id="filtroTom" class="select-filtro" onchange="filtrar()">
-        <option value="">Todos os tons</option>
-      </select>
-    </div>
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-ico">&#9906;</span>
+    <input type="text" id="busca" class="inp-search" placeholder="Buscar música..." oninput="filtrar()"/>
   </div>
+  <select id="filtroMin" class="sel" onchange="filtrar()">
+    <option value="">Todos os ministrantes</option>
+    <option>Raphaela</option><option>Daniela</option><option>Cris</option>
+    <option>Mirian</option><option>Pr. Humberto</option>
+  </select>
+  <select id="filtroTom" class="sel" onchange="filtrar()">
+    <option value="">Todos os tons</option>
+  </select>
+  <span class="count-badge" id="countBadge"></span>
+</div>
 
-  <!-- Grid de músicas -->
-  <main class="main-content">
-    <div class="cards-grid" id="cardsGrid">
-      <!-- Cards injetados via JS -->
-    </div>
-    <div class="empty-state" id="emptyState" style="display:none;">
-      <div class="empty-icon">🎵</div>
-      <p class="empty-title">Nenhuma música encontrada</p>
-      <p class="empty-sub">Adicione a primeira música clicando no botão acima.</p>
-    </div>
-    <div class="loading-state" id="loadingState">
+<!-- GRID -->
+<div class="grid-wrap">
+  <div class="grid" id="grid">
+    <div class="state-loading" id="stLoading">
       <div class="spinner"></div>
-      <p>Carregando músicas...</p>
+      <p style="font-size:12px;color:#555;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Carregando...</p>
     </div>
-  </main>
-
-  <!-- Modal -->
-  <div class="modal-overlay" id="modalOverlay" onclick="fecharModalFora(event)">
-    <div class="modal" id="modal">
-      <div class="modal-header">
-        <h2 class="modal-title" id="modalTitle">Nova Música</h2>
-        <button class="modal-close" onclick="fecharModal()">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Nome da Música *</label>
-          <input type="text" id="inputNome" class="form-input" placeholder="Ex: Oceanos" />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Tom *</label>
-            <select id="inputTom" class="form-input">
-              <option value="">Selecione o tom</option>
-              <option>C</option><option>C#</option><option>D</option>
-              <option>D#</option><option>E</option><option>F</option>
-              <option>F#</option><option>G</option><option>G#</option>
-              <option>A</option><option>A#</option><option>B</option>
-              <option>Cm</option><option>C#m</option><option>Dm</option>
-              <option>D#m</option><option>Em</option><option>Fm</option>
-              <option>F#m</option><option>Gm</option><option>G#m</option>
-              <option>Am</option><option>A#m</option><option>Bm</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Ministrante *</label>
-            <select id="inputMinistrante" class="form-input">
-              <option value="">Selecione</option>
-              <option>Raphaela</option>
-              <option>Daniela</option>
-              <option>Cris</option>
-              <option>Mirian</option>
-              <option>Pr. Humberto</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Observações</label>
-          <textarea id="inputObs" class="form-input form-textarea" placeholder="Informações adicionais, link do YouTube, etc."></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-ghost" onclick="fecharModal()">Cancelar</button>
-        <button class="btn-primary" id="btnSalvar" onclick="salvarMusica()">Salvar Música</button>
-      </div>
+    <div class="state-empty" id="stEmpty">
+      <div class="empty-sym">NO SOUND</div>
+      <p class="empty-ttl">Nenhuma música</p>
+      <p class="empty-sub">Clique em "+ Nova Música" para começar.</p>
     </div>
   </div>
+</div>
 
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
+<!-- MODAL -->
+<div class="overlay-bg" id="overlay" onclick="fecharFora(event)">
+  <div class="modal" id="modal">
+    <div class="modal-hd">
+      <h2 id="modalTitulo">NOVA MÚSICA</h2>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-bd">
 
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+      <!-- Nome -->
+      <div>
+        <label class="flabel">Nome da música</label>
+        <input type="text" id="fNome" class="finput" placeholder="Ex: Oceanos"/>
+      </div>
+
+      <!-- Adicionar tom + ministrante -->
+      <div>
+        <label class="flabel">Tons e Ministrantes</label>
+        <div class="tom-add-row">
+          <select id="fTom" class="finput">
+            <option value="">Tom</option>
+            <option>C</option><option>C#</option><option>D</option><option>D#</option>
+            <option>E</option><option>F</option><option>F#</option><option>G</option>
+            <option>G#</option><option>A</option><option>A#</option><option>B</option>
+            <option>Cm</option><option>C#m</option><option>Dm</option><option>D#m</option>
+            <option>Em</option><option>Fm</option><option>F#m</option><option>Gm</option>
+            <option>G#m</option><option>Am</option><option>A#m</option><option>Bm</option>
+          </select>
+          <select id="fMin" class="finput">
+            <option value="">Ministrante</option>
+            <option>Raphaela</option><option>Daniela</option><option>Cris</option>
+            <option>Mirian</option><option>Pr. Humberto</option>
+          </select>
+          <button type="button" class="btn-add-tom" onclick="adicionarTomMin()">+</button>
+        </div>
+        <!-- Lista de pares adicionados -->
+        <div class="tom-list" id="tomList"></div>
+      </div>
+
+      <!-- Observações -->
+      <div>
+        <label class="flabel">Observações</label>
+        <textarea id="fObs" class="finput ftextarea" placeholder="Link do YouTube, notas, etc."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-ft">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save" id="btnSalvar" onclick="salvar()">SALVAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
