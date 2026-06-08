@@ -17,7 +17,7 @@ Sistema para gerenciar músicas, tons e ministrantes da sua equipe de louvor.
    - **anon / public key** → chave longa que começa com `eyJ...`
 
 ---
-
+ 
 ### 2. Subir no GitHub
 
 ```bash
