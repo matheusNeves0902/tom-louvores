@@ -3,8 +3,8 @@
     "short_name": "Tom Louvores",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#0e0e0e",
-    "theme_color": "#0e0e0e",
+    "background_color": "#000000",
+    "theme_color": "#000000",
     "icons": [
       {
         "src": "logo2.png",
