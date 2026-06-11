@@ -227,7 +227,7 @@
      border-radius:var(--r);
      padding:22px 22px 18px;
      display:flex;flex-direction:column;gap:14px;
-     cursor:default;
+     cursor:pointer;
      transition:border-color 0.2s,background 0.2s;
      position:relative;overflow:hidden;
    }
@@ -555,6 +555,211 @@
      border-color:var(--gray3);
    }
    
+   /* ============================================================
+      MODAL LEITURA (visualizar)
+      ============================================================ */
+   .view-modal{max-width:540px}
+   .view-modal .modal-hd h2{
+     font-size:32px;letter-spacing:0.04em;color:var(--white);
+     line-height:1.05;
+   }
+   .view-hd-actions{display:flex;align-items:center;gap:8px}
+   .view-edit-btn{
+     width:34px;height:34px;
+     background:transparent;border:1px solid var(--black5);
+     color:var(--gray);cursor:pointer;
+     display:flex;align-items:center;justify-content:center;
+     border-radius:4px;transition:all 0.15s;
+   }
+   .view-edit-btn:hover{
+     background:rgba(255,224,0,0.08);
+     color:var(--yellow);border-color:rgba(255,224,0,0.3);
+   }
+   body.read-only .view-edit-btn{display:none}
+
+   .view-bd{gap:24px;padding:24px}
+
+   /* Tons mais destacados */
+   .view-tons{display:flex;flex-direction:column;gap:8px}
+   .view-tons .card-ton-row{
+     background:var(--black3);border:1px solid var(--black5);
+     border-radius:var(--r);padding:12px 16px;
+   }
+   .view-tons .card-badge{
+     font-size:28px;padding:4px 14px;min-width:60px;
+   }
+   .view-tons .card-min-label{font-size:11px;padding:4px 12px}
+
+   /* Seção de observações em caixa destacada */
+   .view-section .flabel{
+     margin-bottom:10px;font-size:11px;color:var(--yellow);
+   }
+   .view-obs{
+     font-size:17px;line-height:1.75;color:var(--white);font-weight:400;
+     white-space:pre-wrap;word-break:break-word;
+     background:var(--black3);
+     border:1px solid var(--black5);
+     border-left:3px solid var(--yellow);
+     border-radius:var(--r);
+     padding:16px 18px;
+   }
+   .view-obs.empty{
+     color:var(--gray2);font-style:italic;font-size:14px;
+     border-left-color:var(--black5);
+   }
+
+   .view-links{display:flex;flex-direction:column;gap:8px}
+   .view-yt-btn{
+     display:flex;align-items:center;gap:10px;
+     padding:14px 18px;
+     background:rgba(255,0,0,0.08);
+     border:1px solid rgba(255,80,80,0.3);
+     border-radius:var(--r);
+     color:#FF6B6B;font-size:14px;font-weight:700;
+     letter-spacing:0.03em;text-transform:uppercase;
+     text-decoration:none;transition:all 0.15s;
+   }
+   .view-yt-btn:hover{
+     background:rgba(255,0,0,0.14);border-color:rgba(255,80,80,0.5);
+   }
+   .view-yt-btn svg{flex-shrink:0}
+
+   /* ============================================================
+      CULTOS
+      ============================================================ */
+   .cultos-wrap{
+     max-width:1280px;margin:36px auto 0;padding:0 36px;
+   }
+   .cultos-head{margin-bottom:18px}
+   .cultos-title{
+     font-family:'Bebas Neue',sans-serif;
+     font-size:clamp(30px,4vw,40px);
+     letter-spacing:0.04em;line-height:1;color:var(--white);
+   }
+   .cultos-title em{color:var(--yellow);font-style:normal}
+   .cultos-sub{
+     font-size:13px;font-weight:300;color:var(--gray);margin-top:8px;
+   }
+   .cultos-grid{
+     display:grid;
+     grid-template-columns:repeat(3,1fr);
+     gap:12px;
+   }
+   .culto-col{
+     background:var(--black2);
+     border:1px solid var(--black4);
+     border-radius:var(--r);
+     display:flex;flex-direction:column;
+     overflow:hidden;min-height:160px;
+   }
+   .culto-col-hd{
+     padding:16px 18px;
+     border-bottom:1px solid var(--black4);
+     display:flex;align-items:center;justify-content:space-between;gap:10px;
+   }
+   .culto-col-titulo{
+     font-family:'Bebas Neue',sans-serif;
+     font-size:22px;letter-spacing:0.04em;color:var(--white);line-height:1;
+   }
+   .culto-col-dia{
+     font-size:10px;font-weight:700;color:var(--yellow);
+     letter-spacing:0.1em;text-transform:uppercase;margin-top:3px;
+   }
+   .culto-col-count{
+     font-size:10px;font-weight:700;color:var(--gray2);
+     letter-spacing:0.08em;text-transform:uppercase;
+     background:var(--black3);border:1px solid var(--black5);
+     padding:3px 9px;border-radius:2px;flex-shrink:0;
+   }
+   .culto-col-bd{
+     padding:12px;display:flex;flex-direction:column;gap:8px;flex:1;
+   }
+   .culto-louvor{
+     background:var(--black3);
+     border:1px solid var(--black5);
+     border-radius:var(--r);
+     padding:10px 12px;
+     display:flex;align-items:center;gap:10px;justify-content:space-between;
+   }
+   .culto-louvor-info{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+   .culto-louvor-click{cursor:pointer;border-radius:4px;transition:opacity 0.15s}
+   .culto-louvor-click:hover{opacity:0.75}
+   .culto-louvor-badge{
+     font-family:'Bebas Neue',sans-serif;
+     font-size:18px;letter-spacing:0.04em;color:var(--yellow);
+     background:rgba(255,224,0,0.08);
+     border:1px solid rgba(255,224,0,0.2);
+     padding:2px 8px;border-radius:4px;
+     flex-shrink:0;min-width:42px;text-align:center;line-height:1.2;
+   }
+   .culto-louvor-txt{min-width:0}
+   .culto-louvor-nome{
+     font-size:13px;font-weight:600;color:var(--white);line-height:1.2;
+     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+   }
+   .culto-louvor-min{
+     font-size:9px;font-weight:700;letter-spacing:0.06em;
+     text-transform:uppercase;margin-top:3px;display:inline-block;
+     padding:2px 8px;border:1px solid;border-radius:2px;
+   }
+   .culto-louvor-rm{
+     width:24px;height:24px;flex-shrink:0;
+     background:transparent;border:1px solid var(--black5);
+     color:var(--gray2);font-size:11px;border-radius:4px;cursor:pointer;
+     display:flex;align-items:center;justify-content:center;transition:all 0.15s;
+   }
+   .culto-louvor-rm:hover{
+     background:rgba(248,113,113,0.1);color:#F87171;border-color:rgba(248,113,113,0.3);
+   }
+   .culto-empty{
+     font-size:11px;color:var(--gray2);text-align:center;
+     padding:18px 8px;letter-spacing:0.04em;
+   }
+   .culto-add-btn{
+     margin:0 12px 12px;
+     padding:9px;background:transparent;
+     border:1px dashed var(--black5);
+     color:var(--gray);font-family:'Inter',sans-serif;
+     font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
+     border-radius:var(--r);cursor:pointer;transition:all 0.15s;
+   }
+   .culto-add-btn:hover{
+     border-color:var(--yellow);color:var(--yellow);
+     background:rgba(255,224,0,0.04);
+   }
+   body.read-only .culto-add-btn,
+   body.read-only .culto-louvor-rm{display:none}
+
+   /* Abas do modal de culto */
+   .culto-tabs{display:flex;gap:6px;margin-bottom:4px}
+   .culto-tab{
+     flex:1;padding:9px;background:var(--black3);
+     border:1px solid var(--black5);color:var(--gray);
+     font-family:'Inter',sans-serif;font-size:12px;font-weight:700;
+     letter-spacing:0.04em;text-transform:uppercase;
+     border-radius:var(--r);cursor:pointer;transition:all 0.15s;
+   }
+   .culto-tab.active{
+     background:var(--yellow);color:var(--black);border-color:var(--yellow);
+   }
+   .culto-musica-list{
+     margin-top:10px;display:flex;flex-direction:column;gap:5px;
+     max-height:280px;overflow-y:auto;padding-right:2px;
+   }
+   .culto-musica-opt{
+     min-height:40px;
+     display:flex;align-items:center;
+     padding:0 12px;background:var(--black3);
+     border:1px solid var(--black5);border-radius:var(--r);
+     font-size:13px;line-height:1.3;color:var(--white);cursor:pointer;transition:all 0.15s;
+     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+   }
+   .culto-musica-opt:hover{border-color:var(--gray3);background:var(--black4)}
+   .culto-musica-opt.sel{border-color:var(--yellow);background:rgba(255,224,0,0.06)}
+   .culto-hint{
+     font-size:11px;color:var(--gray2);margin-top:8px;font-style:italic;
+   }
+
    /* ——— RESPONSIVE ——— */
    @media(max-width:700px){
      .header-inner,.hero,.toolbar,.grid-wrap{padding-left:20px;padding-right:20px}
@@ -582,6 +787,8 @@
      .act-btn.del{opacity:1}
      .grid{grid-template-columns:1fr}
      .tom-add-row{grid-template-columns:1fr 1fr auto}
+     .cultos-wrap{padding-left:20px;padding-right:20px}
+     .cultos-grid{grid-template-columns:1fr}
    }
    @media(max-width:480px){
      .header-inner{padding:0 16px;height:56px}
