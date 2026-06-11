@@ -291,13 +291,17 @@ function render(lista) {
       ? `<button class="act-btn del" title="Excluir" onclick="event.stopPropagation();excluir('${m.id}')">✕</button>`
       : "";
 
+    const obsLimpa = obsSemLinks(m.observacoes || "");
+    const temYt    = obsTemYoutube(m.observacoes || "");
+
     div.innerHTML = `
       <div class="card-head">
         <p class="card-nome">${esc(m.nome)}</p>
         ${delBtn}
       </div>
       <div class="card-tons">${tonsHTML}</div>
-      ${m.observacoes ? `<p class="card-obs">${esc(m.observacoes)}</p>` : ""}
+      ${obsLimpa ? `<p class="card-obs">${esc(obsLimpa)}</p>` : ""}
+      ${temYt ? `<span class="card-yt-tag">▶ YouTube</span>` : ""}
       ${data ? `<div class="card-foot"><span class="card-date">${data}</span></div>` : ""}`;
     grid.appendChild(div);
   });
@@ -353,6 +357,18 @@ function extrairLinks(texto = "") {
 
 function ehYoutube(url) {
   return /(?:youtube\.com|youtu\.be)/i.test(url);
+}
+
+// remove URLs do texto, deixando só o conteúdo escrito
+function obsSemLinks(texto = "") {
+  let t = texto;
+  extrairLinks(texto).forEach(url => { t = t.replace(url, ""); });
+  return t.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+// true se a observação contém algum link do YouTube
+function obsTemYoutube(texto = "") {
+  return extrairLinks(texto).some(ehYoutube);
 }
 
 function abrirView(m) {
@@ -535,34 +551,104 @@ document.addEventListener("keydown", e => {
 const CULTOS_TABLE = "cultos";
 
 const CULTO_DEFS = [
-  { tipo: "quarta",         titulo: "Quarta",        dia: "Quarta-feira"   },
-  { tipo: "domingo_manha",  titulo: "Domingo",       dia: "Domingo · Manhã"},
-  { tipo: "domingo_noite",  titulo: "Domingo",       dia: "Domingo · Noite"},
+  { tipo: "quarta",         titulo: "Quarta",        dia: "Quarta-feira",    diaSemana: 3 },
+  { tipo: "domingo_manha",  titulo: "Domingo",       dia: "Domingo · Manhã", diaSemana: 0 },
+  { tipo: "domingo_noite",  titulo: "Domingo",       dia: "Domingo · Noite", diaSemana: 0 },
 ];
 
-// estado: { quarta:{id,louvores:[]}, domingo_manha:{...}, domingo_noite:{...} }
+// estado: { quarta:{id,louvores:[],atualizado_em}, ... }
 let cultos = {};
 let cultoTipoAtual = null;     // tipo sendo editado no modal
 let cultoMusicaSel = null;     // música escolhida da lista (aba "do repertório")
+
+// próxima data (>= hoje) que cai no dia da semana indicado
+function proximaData(diaSemana) {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const diff = (diaSemana - hoje.getDay() + 7) % 7; // 0 = hoje mesmo
+  const d = new Date(hoje);
+  d.setDate(hoje.getDate() + diff);
+  return d;
+}
+
+function formatarDataCulto(d) {
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
+// um culto "expira" 1 dia após a data dele (passou 1 dia → limpa os louvores)
+function cultoExpirou(def) {
+  const dataCulto = proximaData(def.diaSemana);
+  // mas a data do culto pode ter sido a da semana passada se já passou:
+  // proximaData sempre devolve >= hoje, então comparamos com a última atualização.
+  const dados = cultos[def.tipo];
+  if (!dados || !dados.atualizado_em) return false;
+  if (!dados.louvores || !dados.louvores.length) return false;
+
+  // data do culto a que a lista atual se refere = a próxima ocorrência
+  // a partir do dia em que foi salva
+  const salvo = new Date(dados.atualizado_em);
+  salvo.setHours(0, 0, 0, 0);
+  const diff = (def.diaSemana - salvo.getDay() + 7) % 7;
+  const dataReferente = new Date(salvo);
+  dataReferente.setDate(salvo.getDate() + diff);
+
+  // limite = data do culto + 1 dia (00:00 do dia seguinte ao culto + 1)
+  const limite = new Date(dataReferente);
+  limite.setDate(dataReferente.getDate() + 2); // dia do culto + 1 dia inteiro depois
+  limite.setHours(0, 0, 0, 0);
+
+  return new Date() >= limite;
+}
+
 
 async function carregarCultos() {
   try {
     const rows = await req(`${CULTOS_TABLE}`) || [];
     cultos = {};
-    CULTO_DEFS.forEach(d => { cultos[d.tipo] = { id: null, louvores: [] }; });
+    CULTO_DEFS.forEach(d => { cultos[d.tipo] = { id: null, louvores: [], atualizado_em: null }; });
     rows.forEach(r => {
       const louvores = typeof r.louvores === "string"
         ? (() => { try { return JSON.parse(r.louvores); } catch { return []; } })()
         : (r.louvores || []);
-      cultos[r.tipo] = { id: r.id, louvores };
+      cultos[r.tipo] = {
+        id: r.id,
+        louvores,
+        atualizado_em: r.atualizado_em || null,
+      };
     });
+
+    // limpa louvores de cultos que já passaram +1 dia
+    await limparCultosExpirados();
+
     renderCultos();
   } catch (e) {
     console.error("Cultos:", e);
     // se a tabela ainda não existe, só mostra vazio sem travar a página
     cultos = {};
-    CULTO_DEFS.forEach(d => { cultos[d.tipo] = { id: null, louvores: [] }; });
+    CULTO_DEFS.forEach(d => { cultos[d.tipo] = { id: null, louvores: [], atualizado_em: null }; });
     renderCultos();
+  }
+}
+
+// percorre os cultos e zera os que expiraram (salvando no banco)
+async function limparCultosExpirados() {
+  for (const def of CULTO_DEFS) {
+    if (cultoExpirou(def)) {
+      cultos[def.tipo].louvores = [];
+      // salva direto sem exigir admin (limpeza automática)
+      const dados = cultos[def.tipo];
+      try {
+        if (dados.id) {
+          await req(`${CULTOS_TABLE}?id=eq.${dados.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ louvores: [], atualizado_em: new Date().toISOString() }),
+          });
+          dados.atualizado_em = new Date().toISOString();
+        }
+      } catch (e) {
+        console.error("Falha ao limpar culto expirado:", e);
+      }
+    }
   }
 }
 
@@ -574,6 +660,7 @@ function renderCultos() {
   CULTO_DEFS.forEach(def => {
     const dados    = cultos[def.tipo] || { louvores: [] };
     const louvores = dados.louvores || [];
+    const dataStr  = formatarDataCulto(proximaData(def.diaSemana));
 
     const itensHTML = louvores.length
       ? louvores.map((l, i) => {
@@ -598,8 +685,11 @@ function renderCultos() {
     col.className = "culto-col";
     col.innerHTML = `
       <div class="culto-col-hd">
-        <div>
-          <div class="culto-col-titulo">${def.titulo}</div>
+        <div class="culto-col-hd-left">
+          <div class="culto-col-titulo-row">
+            <span class="culto-col-titulo">${def.titulo}</span>
+            <span class="culto-col-data">${dataStr}</span>
+          </div>
           <div class="culto-col-dia">${def.dia}</div>
         </div>
         <span class="culto-col-count">${louvores.length} ${louvores.length === 1 ? "louvor" : "louvores"}</span>
@@ -613,12 +703,13 @@ function renderCultos() {
 // ── persistência ──────────────────────────────────────────────
 async function salvarCulto(tipo) {
   const dados = cultos[tipo];
-  const payload = { tipo, louvores: dados.louvores, atualizado_em: new Date().toISOString() };
+  const agora = new Date().toISOString();
+  const payload = { tipo, louvores: dados.louvores, atualizado_em: agora };
   try {
     if (dados.id) {
       await req(`${CULTOS_TABLE}?id=eq.${dados.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ louvores: dados.louvores, atualizado_em: payload.atualizado_em }),
+        body: JSON.stringify({ louvores: dados.louvores, atualizado_em: agora }),
       });
     } else {
       const novo = await req(CULTOS_TABLE, {
@@ -627,6 +718,7 @@ async function salvarCulto(tipo) {
       });
       if (novo && novo[0]) dados.id = novo[0].id;
     }
+    dados.atualizado_em = agora;
     return true;
   } catch (e) {
     console.error(e);
