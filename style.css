@@ -27,6 +27,8 @@
      color:var(--white);
      min-height:100vh;
      overflow-x:hidden;
+     touch-action:manipulation;
+     -webkit-text-size-adjust:100%;
    }
    
    /* ——— HEADER ——— */
@@ -789,6 +791,11 @@
      .tom-add-row{grid-template-columns:1fr 1fr auto}
      .cultos-wrap{padding-left:20px;padding-right:20px}
      .cultos-grid{grid-template-columns:1fr}
+
+     /* iOS dá zoom em campos < 16px ao focar — forçar 16px evita isso */
+     .inp-search,.sel,.finput,.login-box input{
+       font-size:16px;
+     }
    }
    @media(max-width:480px){
      .header-inner{padding:0 16px;height:56px}
