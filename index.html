@@ -6,7 +6,7 @@
   <title>Tom Louvores — INVB</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="icon" type="image/png" href="logo2.png">
+  <link rel="icon" type="image/png" href="logo3.png">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="apple-touch-icon" href="logo3.png">
@@ -242,8 +242,25 @@
         <div class="tom-list" id="tomList"></div>
       </div>
       <div>
+        <label class="flabel">Links de Cifra</label>
+        <div class="cifra-add-row">
+          <input type="text" id="fCifra" class="finput" placeholder="Cole o link da cifra"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarCifra();}"/>
+          <button type="button" class="btn-add-tom" onclick="adicionarCifra()">+</button>
+        </div>
+        <div class="cifra-list" id="cifraList"></div>
+      </div>
+      <div>
+        <label class="flabel">Link do YouTube</label>
+        <input type="text" id="fYoutube" class="finput" placeholder="Cole o link do YouTube"/>
+      </div>
+      <div>
+        <label class="flabel">Link do Spotify</label>
+        <input type="text" id="fSpotify" class="finput" placeholder="Cole o link do Spotify"/>
+      </div>
+      <div>
         <label class="flabel">Observações</label>
-        <textarea id="fObs" class="finput ftextarea" placeholder="Link do YouTube, notas, etc."></textarea>
+        <textarea id="fObs" class="finput ftextarea" placeholder="Notas, avisos, etc."></textarea>
       </div>
     </div>
     <div class="modal-ft">

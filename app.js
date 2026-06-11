@@ -13,6 +13,7 @@ const ADMIN_PASS = "louvor123";
 let musicas    = [];
 let editandoId = null;
 let tomMinList = [];
+let cifraList  = [];   // URLs de cifra do modal de edição
 
 const CHIP_CLASS = {
   "Raphaela":    "chip-Raphaela",
@@ -147,8 +148,26 @@ async function carregar() {
 async function salvar() {
   if (!isAdmin()) { toast("Faça login para editar.", true); return; }
 
-  const nome = document.getElementById("fNome").value.trim();
-  const obs  = document.getElementById("fObs").value.trim();
+  const nome  = document.getElementById("fNome").value.trim();
+  const obsTx = document.getElementById("fObs").value.trim();
+  const yt    = document.getElementById("fYoutube").value.trim();
+  const spoti = document.getElementById("fSpotify").value.trim();
+
+  // se sobrou algo digitado no campo de cifra sem clicar no "+", aproveita
+  const cifraPendente = document.getElementById("fCifra").value.trim();
+  if (cifraPendente) {
+    let u = cifraPendente;
+    if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+    if (!cifraList.includes(u)) cifraList.push(u);
+    document.getElementById("fCifra").value = "";
+    renderCifraList();
+  }
+
+  // cada cifra recebe a marcação [cifra] para ser reconhecida em qualquer site
+  const cifrasMarc = cifraList.map(u => CIFRA_TAG + u);
+
+  // junta observação textual + youtube + cifras + spotify num único campo (observacoes)
+  const obs = [obsTx, yt, ...cifrasMarc, spoti].filter(Boolean).join("\n");
 
   if (!nome)              { toast("Preencha o nome da música.", true); return; }
   if (!tomMinList.length) { toast("Adicione ao menos um tom e ministrante.", true); return; }
@@ -247,9 +266,42 @@ function renderTomList() {
   });
 }
 
-// ============================================================
-//  Render cards
-// ============================================================
+// ── Cifras (lista dinâmica no modal) ──────────────────────────
+function adicionarCifra() {
+  const inp = document.getElementById("fCifra");
+  let url = inp.value.trim();
+  if (!url) { toast("Cole o link da cifra antes de adicionar.", true); return; }
+  // adiciona https:// se o usuário esqueceu
+  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+  if (cifraList.includes(url)) { toast("Essa cifra já foi adicionada.", true); return; }
+  cifraList.push(url);
+  inp.value = "";
+  renderCifraList();
+}
+
+function removerCifra(idx) {
+  cifraList.splice(idx, 1);
+  renderCifraList();
+}
+
+function renderCifraList() {
+  const container = document.getElementById("cifraList");
+  if (!container) return;
+  container.innerHTML = "";
+  cifraList.forEach((url, i) => {
+    const div = document.createElement("div");
+    div.className = "tom-list-item";
+    div.innerHTML = `
+      <div class="tom-list-info cifra-list-info">
+        <span class="cifra-list-icon">♪</span>
+        <span class="cifra-list-url">${esc(url)}</span>
+      </div>
+      <button class="tom-list-remove" onclick="removerCifra(${i})" title="Remover">✕</button>`;
+    container.appendChild(div);
+  });
+}
+
+
 
 function render(lista) {
   const grid  = document.getElementById("grid");
@@ -276,6 +328,11 @@ function render(lista) {
         </div>`;
     }).join("") || `<div class="card-ton-row"><span class="card-badge">${esc(m.tom)}</span></div>`;
 
+    const obsLimpa = obsSemLinks(m.observacoes || "");
+    const temYt    = obsTemYoutube(m.observacoes || "");
+    const temSp    = obsTemSpotify(m.observacoes || "");
+    const temCf    = obsTemCifra(m.observacoes || "");
+
     const div = document.createElement("div");
     div.className = "card card-editable";
     div.onclick = () => abrirView(m);
@@ -284,8 +341,11 @@ function render(lista) {
       ? `<button class="act-btn del" title="Excluir" onclick="event.stopPropagation();excluir('${m.id}')">✕</button>`
       : "";
 
-    const obsLimpa = obsSemLinks(m.observacoes || "");
-    const temYt    = obsTemYoutube(m.observacoes || "");
+    const tagsHTML = (temYt || temSp || temCf) ? `<div class="card-tags">
+        ${temYt ? `<span class="card-yt-tag" title="YouTube">▶ YT</span>` : ""}
+        ${temSp ? `<span class="card-yt-tag card-sp-tag" title="Spotify">Spotify</span>` : ""}
+        ${temCf ? `<span class="card-yt-tag card-cf-tag" title="Cifra">Cifra</span>` : ""}
+      </div>` : "";
 
     div.innerHTML = `
       <div class="card-head">
@@ -294,8 +354,10 @@ function render(lista) {
       </div>
       <div class="card-tons">${tonsHTML}</div>
       ${obsLimpa ? `<p class="card-obs">${esc(obsLimpa)}</p>` : ""}
-      ${temYt ? `<span class="card-yt-tag">▶ YouTube</span>` : ""}
-      ${data ? `<div class="card-foot"><span class="card-date">${data}</span></div>` : ""}`;
+      ${(data || tagsHTML) ? `<div class="card-foot">
+        ${tagsHTML}
+        ${data ? `<span class="card-date">${data}</span>` : ""}
+      </div>` : ""}`;
     grid.appendChild(div);
   });
 }
@@ -342,19 +404,37 @@ function atualizarFiltroTons() {
 
 let viewMusicaId = null;
 
-// extrai URLs de uma string
+// marcação usada para identificar um link como cifra (independe do site)
+const CIFRA_TAG = "[cifra]";
+
+// extrai todas as URLs de cifra (marcadas com [cifra])
+function extrairCifras(texto = "") {
+  const re = /\[cifra\](https?:\/\/[^\s]+)/gi;
+  const out = [];
+  let m;
+  while ((m = re.exec(texto)) !== null) out.push(m[1]);
+  return out;
+}
+
+// extrai URLs comuns (YouTube, Spotify, etc.), ignorando as marcadas como cifra
 function extrairLinks(texto = "") {
+  // remove as ocorrências de [cifra]URL antes de varrer os demais links
+  const semCifra = texto.replace(/\[cifra\]https?:\/\/[^\s]+/gi, "");
   const re = /(https?:\/\/[^\s]+)/gi;
-  return texto.match(re) || [];
+  return semCifra.match(re) || [];
 }
 
 function ehYoutube(url) {
   return /(?:youtube\.com|youtu\.be)/i.test(url);
 }
 
-// remove URLs do texto, deixando só o conteúdo escrito
+function ehSpotify(url) {
+  return /(?:open\.spotify\.com|spotify\.link|spoti\.fi)/i.test(url);
+}
+
+// remove todos os links (comuns + cifras marcadas) do texto, deixando só o escrito
 function obsSemLinks(texto = "") {
-  let t = texto;
+  let t = texto.replace(/\[cifra\]https?:\/\/[^\s]+/gi, "");
   extrairLinks(texto).forEach(url => { t = t.replace(url, ""); });
   return t.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
@@ -362,6 +442,14 @@ function obsSemLinks(texto = "") {
 // true se a observação contém algum link do YouTube
 function obsTemYoutube(texto = "") {
   return extrairLinks(texto).some(ehYoutube);
+}
+
+function obsTemSpotify(texto = "") {
+  return extrairLinks(texto).some(ehSpotify);
+}
+
+function obsTemCifra(texto = "") {
+  return extrairCifras(texto).length > 0;
 }
 
 function abrirView(m) {
@@ -386,17 +474,15 @@ function abrirView(m) {
   const obs = (m.observacoes || "").trim();
   const obsEl = document.getElementById("viewObs");
   // separa links do texto: o texto exibido não mostra as URLs (só os botões abaixo)
-  const links = extrairLinks(obs);
-  let obsTexto = obs;
-  links.forEach(url => { obsTexto = obsTexto.replace(url, ""); });
-  // limpa espaços/linhas em branco que sobraram onde estava o link
-  obsTexto = obsTexto.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  const links  = extrairLinks(obs);
+  const cifras = extrairCifras(obs);
+  const obsTexto = obsSemLinks(obs);
 
   if (obsTexto) {
     obsEl.textContent = obsTexto;
     obsEl.classList.remove("empty");
     document.getElementById("viewObsWrap").style.display = "";
-  } else if (links.length) {
+  } else if (links.length || cifras.length) {
     // só tinha link na observação → esconde a seção de texto inteira
     document.getElementById("viewObsWrap").style.display = "none";
   } else {
@@ -405,17 +491,46 @@ function abrirView(m) {
     document.getElementById("viewObsWrap").style.display = "";
   }
 
-  // links (YouTube vira botão)
+  // botões formatados: cifras (fileira própria) + youtube/spotify (lado a lado) + outros
   const linksWrap = document.getElementById("viewLinksWrap");
-  linksWrap.innerHTML = links.map(url => {
-    if (ehYoutube(url)) {
-      return `<a class="view-yt-btn" href="${esc(url)}" target="_blank" rel="noopener">
+
+  const cifraBtns = cifras.map((url, i) =>
+    `<a class="view-yt-btn view-cf-btn" href="${esc(url)}" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>
+        Abrir Cifra${cifras.length > 1 ? " " + (i + 1) : ""}
+      </a>`
+  ).join("");
+
+  const ytUrl = links.find(ehYoutube);
+  const spUrl = links.find(ehSpotify);
+
+  const ytBtn = ytUrl
+    ? `<a class="view-yt-btn view-mini" href="${esc(ytUrl)}" target="_blank" rel="noopener">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
-        Abrir no YouTube
-      </a>`;
-    }
-    return `<a class="view-yt-btn" style="background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.3);color:#60A5FA" href="${esc(url)}" target="_blank" rel="noopener">🔗 Abrir link</a>`;
-  }).join("");
+        YouTube
+      </a>`
+    : "";
+
+  const spBtn = spUrl
+    ? `<a class="view-yt-btn view-sp-btn view-mini" href="${esc(spUrl)}" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.5 17.3a.75.75 0 0 1-1.03.25c-2.82-1.72-6.37-2.11-10.56-1.16a.75.75 0 1 1-.33-1.46c4.58-1.05 8.5-.6 11.67 1.34.35.22.46.68.25 1.03zm1.47-3.27a.94.94 0 0 1-1.29.31c-3.23-1.98-8.15-2.56-11.97-1.4a.94.94 0 1 1-.55-1.8c4.36-1.32 9.78-.68 13.49 1.6.44.27.58.85.32 1.29zm.13-3.4C15.73 8.45 8.4 8.2 4.62 9.35a1.12 1.12 0 1 1-.65-2.15c4.34-1.32 12.43-1.06 16.5 1.36a1.12 1.12 0 0 1-1.15 1.93z"/></svg>
+        Spotify
+      </a>`
+    : "";
+
+  // YouTube + Spotify juntos numa linha (se ao menos um existir)
+  const linhaMidia = (ytBtn || spBtn)
+    ? `<div class="view-links-row">${ytBtn}${spBtn}</div>`
+    : "";
+
+  // demais links (que não são youtube, spotify nem cifra) ficam full-width abaixo
+  const outrosBtns = links
+    .filter(url => !ehYoutube(url) && !ehSpotify(url))
+    .map(url =>
+      `<a class="view-yt-btn" style="background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.3);color:#60A5FA" href="${esc(url)}" target="_blank" rel="noopener">🔗 Abrir link</a>`
+    ).join("");
+
+  linksWrap.innerHTML = cifraBtns + linhaMidia + outrosBtns;
 
   document.getElementById("viewOverlay").classList.add("open");
 }
@@ -481,12 +596,30 @@ function abrirModal(m = null) {
 
   document.getElementById("modalTitulo").textContent = m ? "EDITAR MÚSICA" : "NOVA MÚSICA";
   document.getElementById("fNome").value = m?.nome        || "";
-  document.getElementById("fObs").value  = m?.observacoes || "";
+
+  // separa os links da observação para os campos próprios
+  const obsCompleta = m?.observacoes || "";
+  cifraList         = extrairCifras(obsCompleta);             // várias cifras
+  const comuns      = extrairLinks(obsCompleta);
+  const spotifyUrl  = comuns.find(ehSpotify) || "";
+  const youtubeUrl  = comuns.find(ehYoutube) || "";
+  // observação textual = sem nenhum link (cifras, spotify, youtube e outros saem do texto)
+  let obsTexto = obsSemLinks(obsCompleta);
+  // links comuns que não sejam spotify nem youtube voltam ao texto da obs
+  comuns.filter(u => !ehSpotify(u) && !ehYoutube(u)).forEach(u => {
+    obsTexto = (obsTexto + "\n" + u).trim();
+  });
+
+  document.getElementById("fObs").value     = obsTexto;
+  document.getElementById("fCifra").value   = "";
+  document.getElementById("fYoutube").value = youtubeUrl;
+  document.getElementById("fSpotify").value = spotifyUrl;
   document.getElementById("fTom").value  = "";
   document.getElementById("fMin").value  = "";
   document.getElementById("btnSalvar").textContent = m ? "SALVAR ALTERAÇÕES" : "SALVAR";
 
   renderTomList();
+  renderCifraList();
   document.getElementById("overlay").classList.add("open");
   setTimeout(() => document.getElementById("fNome").focus(), 80);
 }
@@ -500,6 +633,7 @@ function fecharModal() {
   document.getElementById("overlay").classList.remove("open");
   editandoId = null;
   tomMinList = [];
+  cifraList  = [];
 }
 
 function fecharFora(e) {
