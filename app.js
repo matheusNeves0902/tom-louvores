@@ -258,13 +258,6 @@ function render(lista) {
 
   grid.querySelectorAll(".card").forEach(c => c.remove());
 
-  const badge = document.getElementById("countBadge");
-  if (badge) {
-    badge.textContent = lista.length === musicas.length
-      ? musicas.length + " músicas"
-      : lista.length + " de " + musicas.length;
-  }
-
   if (!lista.length) { empty.style.display = "flex"; return; }
   empty.style.display = "none";
 
@@ -339,7 +332,7 @@ function atualizarFiltroTons() {
   const tons = [...new Set(
     musicas.flatMap(m => deserializarPares(m.tom).map(p => p.tom))
   )].sort();
-  sel.innerHTML = `<option value="">Todos os tons</option>` +
+  sel.innerHTML = `<option value="">Tons</option>` +
     tons.map(t => `<option${t === cur ? " selected" : ""}>${t}</option>`).join("");
 }
 
@@ -901,7 +894,27 @@ async function confirmarLouvorCulto() {
   }
 }
 
+// ============================================================
+//  Busca fixa (sombra ao grudar)
+// ============================================================
+
+// detecta quando a busca grudou no topo, para aplicar sombra
+function onScrollBusca() {
+  const mobile = window.innerWidth <= 768;
+  const alvo   = document.querySelector(mobile ? ".search-row" : ".toolbar");
+  const outro  = document.querySelector(mobile ? ".toolbar" : ".search-row");
+  if (outro) outro.classList.remove("stuck");
+  if (!alvo) return;
+  const limite = window.innerWidth <= 480 ? 57 : 65;
+  const grudou = alvo.getBoundingClientRect().top <= limite;
+  alvo.classList.toggle("stuck", grudou);
+}
+
+window.addEventListener("scroll", onScrollBusca, { passive: true });
+window.addEventListener("resize", onScrollBusca);
+
 // ── Init ──────────────────────────────────────────────────────
 aplicarEstadoAuth();
 carregar();
 carregarCultos();
+onScrollBusca();

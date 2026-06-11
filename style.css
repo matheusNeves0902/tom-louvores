@@ -5,6 +5,8 @@
    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap');
 
    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+   html{overflow-x:clip}
    
    :root{
      --black:  #0A0A0A;
@@ -26,7 +28,6 @@
      background:var(--black);
      color:var(--white);
      min-height:100vh;
-     overflow-x:hidden;
      touch-action:manipulation;
      -webkit-text-size-adjust:100%;
    }
@@ -172,11 +173,36 @@
    }
    
    /* ——— TOOLBAR ——— */
+   /* base (>=768px): tudo numa linha, barra INTEIRA fixa ao rolar */
    .toolbar{
-     max-width:1280px;margin:28px auto 0;padding:0 36px;
-     display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+     max-width:1280px;margin:28px auto 0;padding:8px 36px;
+     display:flex;gap:10px;align-items:center;
+     position:sticky;top:64px;z-index:90;
+     background:var(--black);
+     transition:box-shadow 0.2s,border-color 0.2s;
    }
-   .search-wrap{flex:1;min-width:220px;position:relative}
+   .toolbar.stuck{
+     /* border-bottom:1px solid var(--black4); */
+     box-shadow:0 6px 20px rgba(0,0,0,0.4);
+
+   }
+
+   .toolbar.stuck::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 36px;  /* mesmo valor do padding lateral da toolbar */
+    right: 36px;
+    height: 1px;
+    background: var(--black4);
+  }
+   .search-row{
+     flex:1;min-width:0;display:flex;
+   }
+   .filtros-row{
+     display:flex;gap:10px;align-items:center;flex-shrink:0;
+   }
+   .search-wrap{flex:1;min-width:0;position:relative}
    .search-ico{
      position:absolute;left:13px;top:50%;transform:translateY(-50%);
      color:var(--gray2);pointer-events:none;font-size:15px;
@@ -194,13 +220,18 @@
    .inp-search:focus{border-color:var(--yellow)}
    .inp-search::placeholder{color:var(--gray2)}
    .sel{
-     background:var(--black2);
-     border:1px solid var(--black5);
-     color:var(--gray);
-     padding:11px 14px;border-radius:var(--r);
-     font-family:'Inter',sans-serif;font-size:13px;
-     outline:none;cursor:pointer;
-     transition:border-color 0.2s;min-width:165px;
+    background:var(--black2);
+    border:1px solid var(--black5);
+    color:var(--gray);
+    padding:11px 38px 11px 14px;border-radius:var(--r);
+    font-family:'Inter',sans-serif;font-size:13px;
+    outline:none;cursor:pointer;
+    transition:border-color 0.2s;min-width:165px;
+    /* remove a seta nativa e usa uma customizada, afastada da borda */
+    -webkit-appearance:none;-moz-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 14px center;
    }
    .sel:focus{border-color:var(--yellow)}
    .sel option{background:var(--black2);color:var(--white)}
@@ -215,11 +246,13 @@
    }
    
    /* ——— GRID ——— */
-   .grid-wrap{max-width:1280px;margin:20px auto 80px;padding:0 36px}
+   .grid-wrap{max-width:1280px;margin:20px auto 80px;padding:0}
    .grid{
      display:grid;
      grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
      gap:12px;
+     margin: 28px auto 0px;
+     padding: 8px 36px;
    }
    
    /* ——— CARD ——— */
@@ -788,8 +821,33 @@
    }
 
    /* ——— RESPONSIVE ——— */
+   @media(max-width:768px){
+     /* abaixo de 768px: busca em cima (fixa sozinha), filtros embaixo meio a meio */
+     /* toolbar deixa de ser caixa: search-row e filtros viram filhas diretas da section,
+        assim a busca sticky gruda durante TODA a seção, não só na altura da toolbar */
+     .toolbar{display:contents}
+     .repertorio{padding:0 36px}
+     .search-row{
+       position:sticky;top:64px;z-index:90;
+       padding:8px 0 10px;margin-top:28px;
+       background:var(--black);
+       transition:box-shadow 0.2s,border-color 0.2s;
+     }
+     .search-row.stuck{
+       border-bottom:1px solid var(--black4);
+       box-shadow:0 6px 20px rgba(0,0,0,0.4);
+     }
+     .filtros-row{
+       display:flex;gap:10px;align-items:center;
+       padding-bottom:4px;margin-top:0;
+     }
+     /* os dois filtros ocupam metade cada, iguais */
+     .filtros-row .sel{flex:1 1 0;min-width:0;width:auto;}
+     .grid{padding: 0;}
+   }
    @media(max-width:700px){
-     .header-inner,.hero,.toolbar,.grid-wrap{padding-left:20px;padding-right:20px}
+     .header-inner,.hero{padding-left:20px;padding-right:20px}
+     .toolbar{padding-left:20px;padding-right:20px}
      .hero{grid-template-columns:1fr;gap:24px}
      .hero-right-col{align-self:auto;width:100%}
      /* Stats: linha horizontal ocupando 100% da largura */
@@ -816,6 +874,7 @@
      .tom-add-row{grid-template-columns:1fr 1fr auto}
      .cultos-wrap{padding-left:20px;padding-right:20px}
      .cultos-grid{grid-template-columns:1fr}
+     .repertorio{padding-left:20px;padding-right:20px}
 
      /* iOS dá zoom em campos < 16px ao focar — forçar 16px evita isso */
      .inp-search,.sel,.finput,.login-box input{
@@ -823,6 +882,8 @@
      }
    }
    @media(max-width:480px){
+     /* header fica menor (56px): busca gruda logo abaixo dele */
+     .search-row{top:56px}
      .header-inner{padding:0 16px;height:56px}
      .logo-img{height:26px}
      .logo-sep{height:22px}

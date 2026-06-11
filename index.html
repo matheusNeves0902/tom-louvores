@@ -76,21 +76,26 @@
 </section>
 
 <!-- TOOLBAR -->
-<div class="toolbar">
-  <div class="search-wrap">
-    <span class="search-ico">&#9906;</span>
-    <input type="text" id="busca" class="inp-search" placeholder="Buscar música..." oninput="filtrar()"/>
+<!-- REPERTÓRIO (busca + grid: a busca fica fixa durante toda esta seção) -->
+<section class="repertorio">
+  <div class="toolbar">
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="search-ico">&#9906;</span>
+        <input type="text" id="busca" class="inp-search" placeholder="Buscar música..." oninput="filtrar()"/>
+      </div>
+    </div>
+    <div class="filtros-row">
+      <select id="filtroMin" class="sel" onchange="filtrar()">
+        <option value="">Ministrantes</option>
+        <option>Raphaela</option><option>Daniela</option><option>Cris</option>
+        <option>Mirian</option><option>Pr. Humberto</option>
+      </select>
+      <select id="filtroTom" class="sel" onchange="filtrar()">
+        <option value="">Tons</option>
+      </select>
+    </div>
   </div>
-  <select id="filtroMin" class="sel" onchange="filtrar()">
-    <option value="">Todos os ministrantes</option>
-    <option>Raphaela</option><option>Daniela</option><option>Cris</option>
-    <option>Mirian</option><option>Pr. Humberto</option>
-  </select>
-  <select id="filtroTom" class="sel" onchange="filtrar()">
-    <option value="">Todos os tons</option>
-  </select>
-  <span class="count-badge" id="countBadge"></span>
-</div>
 
 <!-- GRID -->
 <div class="grid-wrap">
@@ -106,6 +111,7 @@
     </div>
   </div>
 </div>
+</section>
 
 <!-- MODAL ADICIONAR LOUVOR AO CULTO -->
 <div class="overlay-bg" id="cultoOverlay" onclick="cultoFecharFora(event)">
