@@ -333,10 +333,10 @@
      flex-shrink:0;min-width:48px;text-align:center;
    }
    .card-min-label{
-     font-size:10px;font-weight:700;
-     padding:3px 10px;
-     letter-spacing:0.08em;text-transform:uppercase;
-     border:1px solid;border-radius:2px;
+     font-size:12px;font-weight:700;
+     padding:4px 10px;
+     letter-spacing:0.02em;
+     border:1px solid transparent;border-radius:4px;
    }
    
    .chip-Raphaela{background:rgba(255,224,0,0.1);color:#FFE000;border-color:rgba(255,224,0,0.3)}
@@ -662,7 +662,7 @@
    .view-tons .card-badge{
      font-size:28px;padding:4px 14px;min-width:60px;
    }
-   .view-tons .card-min-label{font-size:11px;padding:4px 12px}
+   .view-tons .card-min-label{font-size:12px;padding:4px 12px}
 
    /* Seção de observações em caixa destacada */
    .view-section .flabel{
