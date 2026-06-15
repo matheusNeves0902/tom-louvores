@@ -687,14 +687,14 @@ const CULTO_DEFS = [
 let cultos = {};
 let cultoTipoAtual = null;     // tipo sendo editado no modal
 let cultoMusicaSel = null;     // música escolhida da lista (aba "do repertório")
+let cultoOfertorioAtual = false; // true quando o item sendo adicionado é o ofertório
 
-// próxima data (>= hoje) que cai no dia da semana indicado
-function proximaData(diaSemana) {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  const diff = (diaSemana - hoje.getDay() + 7) % 7; // 0 = hoje mesmo
-  const d = new Date(hoje);
-  d.setDate(hoje.getDate() + diff);
+// próxima data (>= base) que cai no dia da semana indicado (base padrão = hoje)
+function proximaData(diaSemana, base = new Date()) {
+  const d = new Date(base);
+  d.setHours(0, 0, 0, 0);
+  const diff = (diaSemana - d.getDay() + 7) % 7; // 0 = no próprio dia
+  d.setDate(d.getDate() + diff);
   return d;
 }
 
@@ -702,29 +702,91 @@ function formatarDataCulto(d) {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
 
-// um culto "expira" 1 dia após a data dele (passou 1 dia → limpa os louvores)
-function cultoExpirou(def) {
-  const dataCulto = proximaData(def.diaSemana);
-  // mas a data do culto pode ter sido a da semana passada se já passou:
-  // proximaData sempre devolve >= hoje, então comparamos com a última atualização.
-  const dados = cultos[def.tipo];
-  if (!dados || !dados.atualizado_em) return false;
-  if (!dados.louvores || !dados.louvores.length) return false;
+// data (YYYY-MM-DD em horário local) — ordenável como string e comparável por dia
+function isoDia(d) {
+  const y  = d.getFullYear();
+  const m  = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
 
-  // data do culto a que a lista atual se refere = a próxima ocorrência
-  // a partir do dia em que foi salva
-  const salvo = new Date(dados.atualizado_em);
-  salvo.setHours(0, 0, 0, 0);
-  const diff = (def.diaSemana - salvo.getDay() + 7) % 7;
-  const dataReferente = new Date(salvo);
-  dataReferente.setDate(salvo.getDate() + diff);
+// data do culto (YYYY-MM-DD) a que um novo louvor deve pertencer = próxima ocorrência
+function dataAlvoCulto(tipo) {
+  const def = CULTO_DEFS.find(d => d.tipo === tipo);
+  if (!def || def.diaSemana == null) return isoDia(new Date());
+  return isoDia(proximaData(def.diaSemana));
+}
 
-  // limite = data do culto + 1 dia (00:00 do dia seguinte ao culto + 1)
-  const limite = new Date(dataReferente);
-  limite.setDate(dataReferente.getDate() + 2); // dia do culto + 1 dia inteiro depois
-  limite.setHours(0, 0, 0, 0);
+// "há X" legível a partir de um timestamp ISO (atualizado_em)
+function tempoRelativo(iso) {
+  if (!iso) return "";
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return "";
+  const seg = Math.floor((Date.now() - t) / 1000);
+  if (seg < 45)  return "agora mesmo";
+  const min = Math.round(seg / 60);
+  if (min < 60)  return `há ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24)    return h === 1 ? "há 1 hora" : `há ${h} horas`;
+  const dias = Math.floor(h / 24);
+  if (dias === 1) return "ontem";
+  if (dias < 7)  return `há ${dias} dias`;
+  return "em " + new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
 
-  return new Date() >= limite;
+// monta o texto da lista de um culto, pronto pra colar no WhatsApp
+function textoCultoParaCopiar(def, dados) {
+  const louvores   = dados.louvores || [];
+  const principais = louvores.filter(l => !l.ofertorio);
+  const ofertorios = louvores.filter(l => l.ofertorio);
+  const dataStr    = formatarDataCulto(proximaData(def.diaSemana));
+
+  const linhaMusica = l => `${l.nome} — ${l.tom || "—"}`;
+
+  const linhas = [`${def.dia} — ${dataStr}`, ""];
+  principais.forEach((l, i) => linhas.push(`${i + 1}. ${linhaMusica(l)}`));
+  if (ofertorios.length) {
+    linhas.push("", "Ofertório:");
+    ofertorios.forEach(l => linhas.push(`- ${linhaMusica(l)}`));
+  }
+  return linhas.join("\n");
+}
+
+// copia texto pra área de transferência.
+// tenta o método síncrono primeiro: mantém o "gesto" do clique e funciona em file:// e http.
+// se falhar, tenta a Clipboard API moderna (precisa de contexto seguro / https).
+function copiarTexto(texto) {
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = texto;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, texto.length);
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    if (ok) return Promise.resolve(true);
+  } catch (e) { /* tenta a API moderna abaixo */ }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(texto).then(() => true).catch(() => false);
+  }
+  return Promise.resolve(false);
+}
+
+// clique no botão "Copiar" de um culto
+async function copiarCulto(tipo) {
+  const def   = CULTO_DEFS.find(d => d.tipo === tipo);
+  const dados = cultos[tipo];
+  if (!def || !dados || !(dados.louvores || []).length) {
+    toast("Nada para copiar ainda.", true);
+    return;
+  }
+  const ok = await copiarTexto(textoCultoParaCopiar(def, dados));
+  toast(ok ? "Lista copiada ✓" : "Não consegui copiar — copie manualmente.", !ok);
 }
 
 
@@ -757,26 +819,53 @@ async function carregarCultos() {
   }
 }
 
-// percorre os cultos e zera os que expiraram (salvando no banco)
+// remove de cada culto os louvores cujo culto já passou (data < hoje).
+// louvores antigos sem o campo "data" são tratados como de cultos passados e removidos.
 async function limparCultosExpirados() {
+  const hoje = isoDia(new Date());
   for (const def of CULTO_DEFS) {
-    if (cultoExpirou(def)) {
-      cultos[def.tipo].louvores = [];
-      // salva direto sem exigir admin (limpeza automática)
-      const dados = cultos[def.tipo];
+    const dados = cultos[def.tipo];
+    if (!dados || !dados.louvores || !dados.louvores.length) continue;
+
+    const antes = dados.louvores.length;
+    // mantém só os que ainda não passaram (data do culto >= hoje)
+    dados.louvores = dados.louvores.filter(l => l.data && l.data >= hoje);
+
+    if (dados.louvores.length !== antes) {
+      // algo foi removido → persiste (limpeza automática, sem exigir admin)
       try {
         if (dados.id) {
+          const agora = new Date().toISOString();
           await req(`${CULTOS_TABLE}?id=eq.${dados.id}`, {
             method: "PATCH",
-            body: JSON.stringify({ louvores: [], atualizado_em: new Date().toISOString() }),
+            body: JSON.stringify({ louvores: dados.louvores, atualizado_em: agora }),
           });
-          dados.atualizado_em = new Date().toISOString();
+          dados.atualizado_em = agora;
         }
       } catch (e) {
         console.error("Falha ao limpar culto expirado:", e);
       }
     }
   }
+}
+
+// markup de uma linha de louvor (reutilizado nas duas seções: principal e ofertório)
+// recebe o índice ORIGINAL dentro de cultos[tipo].louvores para remover/abrir corretamente
+function louvorRowHTML(tipo, l, i) {
+  const chip = CHIP_CLASS[l.min] || "";
+  return `
+    <div class="culto-louvor">
+      <div class="culto-louvor-info culto-louvor-click"
+           onclick="abrirViewCulto('${tipo}',${i})" title="Ver detalhes">
+        <span class="culto-louvor-badge">${esc(l.tom || "—")}</span>
+        <div class="culto-louvor-txt">
+          <div class="culto-louvor-nome">${esc(l.nome)}</div>
+          ${l.min ? `<span class="culto-louvor-min ${chip}">${esc(l.min)}</span>` : ""}
+        </div>
+      </div>
+      <button class="culto-louvor-rm" title="Remover"
+        onclick="event.stopPropagation();removerLouvorCulto('${tipo}',${i})">✕</button>
+    </div>`;
 }
 
 function renderCultos() {
@@ -789,27 +878,35 @@ function renderCultos() {
     const louvores = dados.louvores || [];
     const dataStr  = formatarDataCulto(proximaData(def.diaSemana));
 
-    const itensHTML = louvores.length
-      ? louvores.map((l, i) => {
-          const chip = CHIP_CLASS[l.min] || "";
-          return `
-            <div class="culto-louvor">
-              <div class="culto-louvor-info culto-louvor-click"
-                   onclick="abrirViewCulto('${def.tipo}',${i})" title="Ver detalhes">
-                <span class="culto-louvor-badge">${esc(l.tom || "—")}</span>
-                <div class="culto-louvor-txt">
-                  <div class="culto-louvor-nome">${esc(l.nome)}</div>
-                  ${l.min ? `<span class="culto-louvor-min ${chip}">${esc(l.min)}</span>` : ""}
-                </div>
-              </div>
-              <button class="culto-louvor-rm" title="Remover"
-                onclick="event.stopPropagation();removerLouvorCulto('${def.tipo}',${i})">✕</button>
-            </div>`;
-        }).join("")
+    // separa louvores principais x ofertório, preservando o índice original
+    const principais = [];
+    const ofertorio  = [];
+    louvores.forEach((l, i) => {
+      (l.ofertorio ? ofertorio : principais).push({ l, i });
+    });
+
+    const itensHTML = principais.length
+      ? principais.map(x => louvorRowHTML(def.tipo, x.l, x.i)).join("")
       : `<div class="culto-empty">Nenhum louvor adicionado.</div>`;
+
+    const ofertorioHTML = ofertorio.length
+      ? ofertorio.map(x => louvorRowHTML(def.tipo, x.l, x.i)).join("")
+      : `<div class="culto-empty">Nenhum ofertório definido.</div>`;
 
     const col = document.createElement("div");
     col.className = "culto-col";
+
+    const atualizadoStr = tempoRelativo(dados.atualizado_em);
+    const metaHTML = louvores.length
+      ? `<div class="culto-col-meta">
+           <span class="culto-atualizado">${atualizadoStr ? "Atualizado " + atualizadoStr : ""}</span>
+           <button class="culto-copy-btn" onclick="copiarCulto('${def.tipo}')" title="Copiar lista">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+             Copiar
+           </button>
+         </div>`
+      : "";
+
     col.innerHTML = `
       <div class="culto-col-hd">
         <div class="culto-col-hd-left">
@@ -819,10 +916,16 @@ function renderCultos() {
           </div>
           <div class="culto-col-dia">${def.dia}</div>
         </div>
-        <span class="culto-col-count">${louvores.length} ${louvores.length === 1 ? "louvor" : "louvores"}</span>
+        <span class="culto-col-count">${principais.length} ${principais.length === 1 ? "louvor" : "louvores"}</span>
       </div>
       <div class="culto-col-bd">${itensHTML}</div>
-      <button class="culto-add-btn" onclick="abrirCultoModal('${def.tipo}')">+ Adicionar louvor</button>`;
+      <button class="culto-add-btn" onclick="abrirCultoModal('${def.tipo}')">+ Adicionar louvor</button>
+      <div class="culto-ofertorio">
+        <div class="culto-ofertorio-label">Ofertório</div>
+        <div class="culto-ofertorio-bd">${ofertorioHTML}</div>
+        <button class="culto-add-btn culto-add-ofertorio" onclick="abrirCultoModal('${def.tipo}', true)">+ Adicionar ofertório</button>
+      </div>
+      ${metaHTML}`;
     grid.appendChild(col);
   });
 }
@@ -862,14 +965,15 @@ async function removerLouvorCulto(tipo, idx) {
 }
 
 // ── modal de adicionar louvor ─────────────────────────────────
-function abrirCultoModal(tipo) {
+function abrirCultoModal(tipo, ofertorio = false) {
   if (!isAdmin()) { abrirLogin(); return; }
   cultoTipoAtual = tipo;
   cultoMusicaSel = null;
+  cultoOfertorioAtual = !!ofertorio;
 
   const def = CULTO_DEFS.find(d => d.tipo === tipo);
   document.getElementById("cultoModalTitulo").textContent =
-    `ADICIONAR · ${def.titulo.toUpperCase()}`;
+    `${ofertorio ? "OFERTÓRIO" : "ADICIONAR"} · ${def.titulo.toUpperCase()}`;
 
   // reset campos
   document.getElementById("cBuscaMusica").value = "";
@@ -890,6 +994,7 @@ function fecharCultoModal() {
   document.getElementById("cultoOverlay").classList.remove("open");
   cultoTipoAtual = null;
   cultoMusicaSel = null;
+  cultoOfertorioAtual = false;
 }
 
 function cultoFecharFora(e) {
@@ -1006,14 +1111,17 @@ async function confirmarLouvorCulto() {
       }
     }
 
-    // adiciona ao culto
-    cultos[cultoTipoAtual].louvores.push({ musica_id: musicaId, nome, tom, min });
+    // adiciona ao culto (marca como ofertório se o modal foi aberto nesse modo)
+    // "data" = dia do culto a que o louvor pertence, usado para limpeza automática
+    const item = { musica_id: musicaId, nome, tom, min, data: dataAlvoCulto(cultoTipoAtual) };
+    if (cultoOfertorioAtual) item.ofertorio = true;
+    cultos[cultoTipoAtual].louvores.push(item);
     const ok = await salvarCulto(cultoTipoAtual);
 
     if (ok) {
       renderCultos();
       if (criando) await carregar(); // atualiza repertório/stats
-      toast("Louvor adicionado ✓");
+      toast(cultoOfertorioAtual ? "Ofertório adicionado ✓" : "Louvor adicionado ✓");
       fecharCultoModal();
     } else {
       // desfaz se falhou
