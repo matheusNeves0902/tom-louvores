@@ -16,7 +16,7 @@ Sistema para gerenciar músicas, tons e ministrantes da sua equipe de louvor.
    - **Project URL** → algo como `https://xyzabcdef.supabase.co`
    - **anon / public key** → chave longa que começa com `eyJ...`
 
----
+----
  
 ### 2. Subir no GitHub
 
