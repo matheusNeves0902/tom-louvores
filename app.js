@@ -23,6 +23,8 @@ const CHIP_CLASS = {
   "Pr. Humberto":"chip-Humberto",
 };
 
+const MINISTRANTES = ["Raphaela", "Daniela", "Cris", "Mirian", "Pr. Humberto"];
+
 // ============================================================
 //  AUTH — Login / Logout
 // ============================================================
@@ -794,14 +796,23 @@ async function carregarCultos() {
   try {
     const rows = await req(`${CULTOS_TABLE}`) || [];
     cultos = {};
-    CULTO_DEFS.forEach(d => { cultos[d.tipo] = { id: null, louvores: [], atualizado_em: null }; });
+    CULTO_DEFS.forEach(d => { cultos[d.tipo] = { id: null, louvores: [], ministrante: "", atualizado_em: null }; });
     rows.forEach(r => {
-      const louvores = typeof r.louvores === "string"
+      const raw = typeof r.louvores === "string"
         ? (() => { try { return JSON.parse(r.louvores); } catch { return []; } })()
         : (r.louvores || []);
+      // formato antigo: array de louvores. formato novo: { ministrante, itens: [...] }
+      let lista = [], ministrante = "";
+      if (Array.isArray(raw)) {
+        lista = raw;
+      } else if (raw && typeof raw === "object") {
+        lista = Array.isArray(raw.itens) ? raw.itens : [];
+        ministrante = raw.ministrante || "";
+      }
       cultos[r.tipo] = {
         id: r.id,
-        louvores,
+        louvores: lista,
+        ministrante,
         atualizado_em: r.atualizado_em || null,
       };
     });
@@ -814,9 +825,14 @@ async function carregarCultos() {
     console.error("Cultos:", e);
     // se a tabela ainda não existe, só mostra vazio sem travar a página
     cultos = {};
-    CULTO_DEFS.forEach(d => { cultos[d.tipo] = { id: null, louvores: [], atualizado_em: null }; });
+    CULTO_DEFS.forEach(d => { cultos[d.tipo] = { id: null, louvores: [], ministrante: "", atualizado_em: null }; });
     renderCultos();
   }
+}
+
+// formato salvo no banco: { ministrante, itens } — guarda o escalado junto da lista, sem coluna nova
+function serializarLouvores(dados) {
+  return { ministrante: dados.ministrante || "", itens: dados.louvores || [] };
 }
 
 // remove de cada culto os louvores cujo culto já passou (data < hoje).
@@ -838,7 +854,7 @@ async function limparCultosExpirados() {
           const agora = new Date().toISOString();
           await req(`${CULTOS_TABLE}?id=eq.${dados.id}`, {
             method: "PATCH",
-            body: JSON.stringify({ louvores: dados.louvores, atualizado_em: agora }),
+            body: JSON.stringify({ louvores: serializarLouvores(dados), atualizado_em: agora }),
           });
           dados.atualizado_em = agora;
         }
@@ -852,7 +868,6 @@ async function limparCultosExpirados() {
 // markup de uma linha de louvor (reutilizado nas duas seções: principal e ofertório)
 // recebe o índice ORIGINAL dentro de cultos[tipo].louvores para remover/abrir corretamente
 function louvorRowHTML(tipo, l, i) {
-  const chip = CHIP_CLASS[l.min] || "";
   return `
     <div class="culto-louvor">
       <div class="culto-louvor-info culto-louvor-click"
@@ -860,7 +875,6 @@ function louvorRowHTML(tipo, l, i) {
         <span class="culto-louvor-badge">${esc(l.tom || "—")}</span>
         <div class="culto-louvor-txt">
           <div class="culto-louvor-nome">${esc(l.nome)}</div>
-          ${l.min ? `<span class="culto-louvor-min ${chip}">${esc(l.min)}</span>` : ""}
         </div>
       </div>
       <button class="culto-louvor-rm" title="Remover"
@@ -907,6 +921,21 @@ function renderCultos() {
          </div>`
       : "";
 
+    // ministrante escalado do culto: select pra admin, texto pra quem só visualiza
+    const escalado = dados.ministrante || "";
+    const chipEscalado = CHIP_CLASS[escalado] || "";
+    const optsEscalado = MINISTRANTES.map(m =>
+      `<option${m === escalado ? " selected" : ""}>${m}</option>`).join("");
+    const escalaHTML = `
+      <div class="culto-escala">
+        <span class="culto-escala-label">Ministrante</span>
+        <select class="culto-escala-sel" onchange="definirEscalado('${def.tipo}', this.value)">
+          <option value="">— escalar —</option>
+          ${optsEscalado}
+        </select>
+        <span class="culto-escala-nome ${escalado ? chipEscalado : "culto-escala-vazio"}">${escalado || "A definir"}</span>
+      </div>`;
+
     col.innerHTML = `
       <div class="culto-col-hd">
         <div class="culto-col-hd-left">
@@ -918,6 +947,7 @@ function renderCultos() {
         </div>
         <span class="culto-col-count">${principais.length} ${principais.length === 1 ? "louvor" : "louvores"}</span>
       </div>
+      ${escalaHTML}
       <div class="culto-col-bd">${itensHTML}</div>
       <button class="culto-add-btn" onclick="abrirCultoModal('${def.tipo}')">+ Adicionar louvor</button>
       <div class="culto-ofertorio">
@@ -934,12 +964,13 @@ function renderCultos() {
 async function salvarCulto(tipo) {
   const dados = cultos[tipo];
   const agora = new Date().toISOString();
-  const payload = { tipo, louvores: dados.louvores, atualizado_em: agora };
+  const louvoresSerial = serializarLouvores(dados);
+  const payload = { tipo, louvores: louvoresSerial, atualizado_em: agora };
   try {
     if (dados.id) {
       await req(`${CULTOS_TABLE}?id=eq.${dados.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ louvores: dados.louvores, atualizado_em: agora }),
+        body: JSON.stringify({ louvores: louvoresSerial, atualizado_em: agora }),
       });
     } else {
       const novo = await req(CULTOS_TABLE, {
@@ -954,6 +985,24 @@ async function salvarCulto(tipo) {
     console.error(e);
     toast("Erro ao salvar o culto. Verifique a tabela no Supabase.", true);
     return false;
+  }
+}
+
+// define/troca o ministrante escalado de um culto
+async function definirEscalado(tipo, valor) {
+  if (!isAdmin()) { toast("Faça login para editar.", true); return; }
+  const dados = cultos[tipo];
+  if (!dados) return;
+  const anterior = dados.ministrante || "";
+  if (valor === anterior) return;
+  dados.ministrante = valor;
+  renderCultos();
+  const ok = await salvarCulto(tipo);
+  if (ok) {
+    toast(valor ? `Escalado: ${valor} ✓` : "Ministrante removido ✓");
+  } else {
+    dados.ministrante = anterior; // desfaz em caso de erro
+    renderCultos();
   }
 }
 
@@ -981,7 +1030,6 @@ function abrirCultoModal(tipo, ofertorio = false) {
   document.getElementById("cNovoTom").value = "";
   document.getElementById("cNovoMin").value = "";
   document.getElementById("cTomEscolhido").value = "";
-  document.getElementById("cMinEscolhido").value = "";
   document.getElementById("cultoTomWrap").style.display = "none";
 
   cultoTab("escolher");
@@ -1040,24 +1088,16 @@ function selecionarMusicaCulto(id) {
     el.classList.toggle("sel", el.dataset.id == id);
   });
 
-  // popular dropdown de tom com os tons já cadastrados dessa música
+  // popular dropdown de tom com os tons já cadastrados dessa música (só o tom, sem ministrante)
   const pares = deserializarPares(m.tom);
+  const tonsUnicos = [...new Set(pares.map(p => p.tom).filter(Boolean))];
   const sel = document.getElementById("cTomEscolhido");
   sel.innerHTML = `<option value="">Tom</option>` +
-    pares.map(p => `<option value="${esc(p.tom)}" data-min="${esc(p.min || "")}">${esc(p.tom)}${p.min ? " · " + esc(p.min) : ""}</option>`).join("");
+    tonsUnicos.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  sel.onchange = null;
 
-  // se a música só tem 1 tom, já preenche tom + ministrante
-  if (pares.length === 1) {
-    sel.value = pares[0].tom;
-    if (pares[0].min) document.getElementById("cMinEscolhido").value = pares[0].min;
-  }
-
-  // ao trocar de tom, sugerir o ministrante daquele tom
-  sel.onchange = () => {
-    const opt = sel.options[sel.selectedIndex];
-    const min = opt ? opt.getAttribute("data-min") : "";
-    if (min) document.getElementById("cMinEscolhido").value = min;
-  };
+  // se a música só tem 1 tom, já seleciona
+  if (tonsUnicos.length === 1) sel.value = tonsUnicos[0];
 
   document.getElementById("cultoTomWrap").style.display = "";
 }
@@ -1067,22 +1107,20 @@ async function confirmarLouvorCulto() {
   if (!isAdmin()) { toast("Faça login para editar.", true); return; }
   const criando = document.getElementById("tabCriar").classList.contains("active");
 
-  let nome, tom, min, musicaId = null;
+  let nome, tom, min = "", musicaId = null;
 
   if (criando) {
     nome = document.getElementById("cNovoNome").value.trim();
     tom  = document.getElementById("cNovoTom").value;
-    min  = document.getElementById("cNovoMin").value;
+    min  = document.getElementById("cNovoMin").value; // usado só pro cadastro no repertório
     if (!nome) { toast("Preencha o nome da música.", true); return; }
     if (!tom || !min) { toast("Selecione tom e ministrante.", true); return; }
   } else {
     if (!cultoMusicaSel) { toast("Escolha uma música.", true); return; }
     nome = cultoMusicaSel.nome;
     tom  = document.getElementById("cTomEscolhido").value;
-    min  = document.getElementById("cMinEscolhido").value;
     musicaId = cultoMusicaSel.id;
     if (!tom) { toast("Selecione o tom.", true); return; }
-    if (!min) { toast("Selecione o ministrante.", true); return; }
   }
 
   const btn = document.getElementById("btnAddLouvor");
@@ -1113,7 +1151,8 @@ async function confirmarLouvorCulto() {
 
     // adiciona ao culto (marca como ofertório se o modal foi aberto nesse modo)
     // "data" = dia do culto a que o louvor pertence, usado para limpeza automática
-    const item = { musica_id: musicaId, nome, tom, min, data: dataAlvoCulto(cultoTipoAtual) };
+    // obs.: o ministrante agora é por culto (escalado no topo), não por louvor
+    const item = { musica_id: musicaId, nome, tom, data: dataAlvoCulto(cultoTipoAtual) };
     if (cultoOfertorioAtual) item.ofertorio = true;
     cultos[cultoTipoAtual].louvores.push(item);
     const ok = await salvarCulto(cultoTipoAtual);

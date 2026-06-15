@@ -884,6 +884,35 @@
    }
    .culto-copy-btn svg{width:13px;height:13px}
 
+   /* Ministrante escalado do culto (topo do bloco) */
+   .culto-escala{
+     display:flex;align-items:center;gap:10px;
+     padding:11px 18px;
+     border-bottom:1px solid var(--black4);
+     background:rgba(255,255,255,0.015);
+   }
+   .culto-escala-label{
+     font-size:10px;font-weight:700;color:var(--gray2);
+     letter-spacing:0.1em;text-transform:uppercase;flex-shrink:0;
+   }
+   .culto-escala-sel{
+     flex:1;min-width:0;
+     background:var(--black3);border:1px solid var(--black5);
+     color:var(--white);font-family:'Inter',sans-serif;
+     font-size:12px;font-weight:600;
+     padding:7px 10px;border-radius:var(--r);cursor:pointer;transition:border-color 0.15s;
+   }
+   .culto-escala-sel:hover{border-color:var(--gray2)}
+   .culto-escala-sel:focus{outline:none;border-color:var(--yellow)}
+   .culto-escala-nome{
+     font-size:12px;font-weight:700;letter-spacing:0.02em;
+     padding:4px 10px;border:1px solid transparent;border-radius:4px;
+   }
+   .culto-escala-vazio{color:var(--gray2);font-weight:600}
+   /* admin vê o seletor; quem só visualiza vê o nome */
+   body.read-only .culto-escala-sel{display:none}
+   body:not(.read-only) .culto-escala-nome{display:none}
+
    /* Abas do modal de culto */
    .culto-tabs{display:flex;gap:6px;margin-bottom:4px}
    .culto-tab{
