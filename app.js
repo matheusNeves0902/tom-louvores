@@ -100,6 +100,52 @@ function deserializarPares(str) {
 }
 
 // ============================================================
+//  Tom único → vale para todos os ministrantes
+// ============================================================
+
+// true quando a música tem apenas UM tom cadastrado
+function tomParaTodos(pares) {
+  return pares.length === 1 && !!pares[0].tom;
+}
+
+// pares "efetivos": se só existe um tom, ele é replicado para todos
+// os ministrantes do sistema (usado nos filtros e buscas)
+function paresEfetivos(m) {
+  const pares = deserializarPares(m.tom);
+  if (tomParaTodos(pares)) {
+    return MINISTRANTES.map(min => ({ tom: pares[0].tom, min, auto: true }));
+  }
+  return pares;
+}
+
+// HTML das linhas de tom — usado no card e no modal de leitura.
+// expandir=false mantém o par exatamente como veio (ex.: tom de um culto).
+function tonsParaHTML(m, expandir = true) {
+  const pares = deserializarPares(m.tom);
+
+  if (!pares.length) {
+    return `<div class="card-ton-row"><span class="card-badge">${esc(m.tom || "—")}</span></div>`;
+  }
+
+  if (expandir && tomParaTodos(pares)) {
+    return `
+      <div class="card-ton-row">
+        <span class="card-badge">${esc(pares[0].tom)}</span>
+        <span class="card-min-label chip-todos">Todos</span>
+      </div>`;
+  }
+
+  return pares.map(p => {
+    const chip = CHIP_CLASS[p.min] || "";
+    return `
+      <div class="card-ton-row">
+        <span class="card-badge">${esc(p.tom)}</span>
+        ${p.min ? `<span class="card-min-label ${chip}">${esc(p.min)}</span>` : ""}
+      </div>`;
+  }).join("");
+}
+
+// ============================================================
 //  API
 // ============================================================
 
@@ -266,6 +312,14 @@ function renderTomList() {
       <button class="tom-list-remove" onclick="removerTomMin(${i})" title="Remover">✕</button>`;
     container.appendChild(div);
   });
+
+  // aviso: com um único tom, ele passa a valer para todos os ministrantes
+  const aviso = document.createElement("div");
+  aviso.className = "tom-list-hint";
+  aviso.textContent = tomMinList.length === 1
+    ? "Só um tom cadastrado — ele vale para todos os ministrantes."
+    : "";
+  if (aviso.textContent) container.appendChild(aviso);
 }
 
 // ── Cifras (lista dinâmica no modal) ──────────────────────────
@@ -318,17 +372,10 @@ function render(lista) {
   const admin = isAdmin();
 
   lista.forEach(m => {
-    const pares = deserializarPares(m.tom);
-    const data  = m.criado_em ? new Date(m.criado_em).toLocaleDateString("pt-BR") : "";
+    const data = m.criado_em ? new Date(m.criado_em).toLocaleDateString("pt-BR") : "";
 
-    const tonsHTML = pares.map(p => {
-      const chip = CHIP_CLASS[p.min] || "";
-      return `
-        <div class="card-ton-row">
-          <span class="card-badge">${esc(p.tom)}</span>
-          ${p.min ? `<span class="card-min-label ${chip}">${esc(p.min)}</span>` : ""}
-        </div>`;
-    }).join("") || `<div class="card-ton-row"><span class="card-badge">${esc(m.tom)}</span></div>`;
+    // um único tom → mostra "Todos" no lugar do ministrante
+    const tonsHTML = tonsParaHTML(m);
 
     const obsLimpa = obsSemLinks(m.observacoes || "");
     const temYt    = obsTemYoutube(m.observacoes || "");
@@ -373,7 +420,8 @@ function filtrar() {
   const m = document.getElementById("filtroMin").value;
   const t = document.getElementById("filtroTom").value;
   render(musicas.filter(x => {
-    const pares = deserializarPares(x.tom);
+    // pares efetivos: tom único vale para todos os ministrantes
+    const pares = paresEfetivos(x);
     const tons  = pares.map(p => p.tom);
     const mins  = pares.map(p => p.min);
     return (
@@ -454,23 +502,15 @@ function obsTemCifra(texto = "") {
   return extrairCifras(texto).length > 0;
 }
 
-function abrirView(m) {
+// expandirTom=false mantém o par como veio (usado quando o tom vem de um culto)
+function abrirView(m, expandirTom = true) {
   viewMusicaId = m.id;
   ajustarBotaoEdicaoView(!!m.id);
 
   document.getElementById("viewTitulo").textContent = m.nome || "MÚSICA";
 
   // tons + ministrantes
-  const pares = deserializarPares(m.tom);
-  const tonsBox = document.getElementById("viewTons");
-  tonsBox.innerHTML = (pares.length ? pares : [{ tom: m.tom, min: "" }]).map(p => {
-    const chip = CHIP_CLASS[p.min] || "";
-    return `
-      <div class="card-ton-row">
-        <span class="card-badge">${esc(p.tom)}</span>
-        ${p.min ? `<span class="card-min-label ${chip}">${esc(p.min)}</span>` : ""}
-      </div>`;
-  }).join("");
+  document.getElementById("viewTons").innerHTML = tonsParaHTML(m, expandirTom);
 
   // observações
   const obs = (m.observacoes || "").trim();
@@ -573,9 +613,8 @@ function abrirViewCulto(tipo, idx) {
       ...original,
       tom: serializarPares([{ tom: l.tom, min: l.min }]),
     };
-    abrirView(m);
-    // restaura todos os tons abaixo? não: o culto define um tom específico.
-    // mas mantemos as observações da música original (já vêm em original.observacoes)
+    // false: o tom aqui é o do culto, não deve virar "Todos"
+    abrirView(m, false);
   } else {
     // música não está mais no repertório: mostra só o que o louvor guarda
     abrirView({
@@ -583,7 +622,7 @@ function abrirViewCulto(tipo, idx) {
       nome: l.nome,
       tom: serializarPares([{ tom: l.tom, min: l.min }]),
       observacoes: "",
-    });
+    }, false);
   }
 }
 
