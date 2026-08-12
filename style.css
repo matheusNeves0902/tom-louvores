@@ -862,20 +862,25 @@
    body.read-only .culto-add-btn,
    body.read-only .culto-louvor-rm{display:none}
 
-   /* Ofertório: campo no rodapé de cada bloco de culto */
-   .culto-ofertorio{
+   /* Seções extras (Ofertório, Pós-palavra) no rodapé de cada bloco de culto */
+   .culto-secao{
      margin:0 12px 12px;
      padding-top:13px;
      border-top:1px solid var(--black4);
      display:flex;flex-direction:column;gap:8px;
    }
-   .culto-ofertorio-label{
+   .culto-secao-label{
      font-size:10px;font-weight:700;color:var(--yellow);
      letter-spacing:0.12em;text-transform:uppercase;
    }
-   .culto-ofertorio-bd{display:flex;flex-direction:column;gap:8px}
-   /* o botão de adicionar ofertório vive dentro da seção (que já tem margem) */
-   .culto-add-ofertorio{margin:0}
+   .culto-secao-pos .culto-secao-label{color:#A78BFA}
+   .culto-secao-pos .culto-add-btn:hover{
+     border-color:#A78BFA;color:#A78BFA;
+     background:rgba(167,139,250,0.05);
+   }
+   .culto-secao-bd{display:flex;flex-direction:column;gap:8px}
+   /* o botão de adicionar vive dentro da seção (que já tem margem) */
+   .culto-add-secao{margin:0}
 
    /* Rodapé: "atualizado há X" + botão Copiar (visível para todos) */
    .culto-col-meta{
