@@ -339,6 +339,23 @@
      border:1px solid transparent;border-radius:4px;
    }
 
+   /* lado direito da linha de tom: ministrante + selo de mais usado */
+   .ton-row-right{
+     display:flex;align-items:center;gap:6px;
+     margin-left:auto;min-width:0;
+   }
+   /* selo do tom mais cantado nos cultos */
+   .tom-top{
+     flex-shrink:0;
+     font-size:10px;font-weight:800;letter-spacing:0.04em;
+     color:var(--yellow);
+     background:rgba(255,224,0,0.08);
+     border:1px solid rgba(255,224,0,0.3);
+     padding:3px 7px;border-radius:4px;line-height:1;
+     white-space:nowrap;
+   }
+   .view-tons .tom-top{font-size:11px;padding:4px 9px}
+
    .chip-Raphaela{background:rgba(255,224,0,0.1);color:#FFE000;}
    .chip-Daniela {background:rgba(96,165,250,0.1);color:#60A5FA;}
    .chip-Cris    {background:rgba(74,222,128,0.1);color:#4ADE80;}
