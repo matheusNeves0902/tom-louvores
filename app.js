@@ -12,7 +12,7 @@ const ADMIN_PASS = "louvor123";
 
 let musicas    = [];
 let editandoId = null;
-let tomMinList = [];
+let tomMinList = [];   // [{ tom, mins: [nomes...] }]
 let cifraList  = [];   // URLs de cifra do modal de edição
 
 const CHIP_CLASS = {
@@ -100,12 +100,26 @@ function deserializarPares(str) {
 }
 
 // ============================================================
+//  Ministrantes por par (agora um tom pode ter vários nomes)
+// ============================================================
+
+// "Raphaela, Cris" → ["Raphaela","Cris"]
+function minsToArray(str) {
+  return (str || "").split(",").map(s => s.trim()).filter(Boolean);
+}
+
+// ["Raphaela","Cris"] → "Raphaela, Cris"
+function minsFromArray(arr) {
+  return (arr || []).filter(Boolean).join(", ");
+}
+
+// ============================================================
 //  Tom único → gravado como "Todos"
 // ============================================================
 //  Com um único tom, o par é SALVO NO BANCO como min="Todos",
-//  e o ministrante real fica preservado em "min_orig". Assim
-//  sistemas externos leem a tag direto da tabela, e ao cadastrar
-//  um segundo tom o nome verdadeiro volta sozinho.
+//  e o(s) ministrante(s) real(is) ficam preservados em "min_orig".
+//  Assim sistemas externos leem a tag direto da tabela, e ao
+//  cadastrar um segundo tom o(s) nome(s) verdadeiro(s) volta(m).
 
 const MIN_TODOS = "Todos";
 
@@ -119,29 +133,39 @@ function parEhTodos(p, pares) {
   return p.min === MIN_TODOS || tomParaTodos(pares);
 }
 
+// ministrantes reais de um par. Retorna null quando o par vale
+// para todo mundo (tom único / tag "Todos").
+function minsReaisDoPar(p, pares) {
+  if (parEhTodos(p, pares)) {
+    return null;
+  }
+  return minsToArray(p.min);
+}
+
 // normaliza a lista antes de gravar:
-//  1 tom  → min = "Todos", nome real guardado em min_orig
-//  2+ tons → volta o nome real e descarta min_orig
+//  1 tom  → min = "Todos", nome(s) real(is) guardado(s) em min_orig
+//  2+ tons → volta o(s) nome(s) real(is) e descarta min_orig
 function normalizarParesParaSalvar(lista) {
   if (lista.length === 1) {
     const p = lista[0];
-    const real = p.min_orig || (p.min === MIN_TODOS ? "" : p.min) || "";
+    const real = minsFromArray(p.mins);
     const par  = { tom: p.tom, min: MIN_TODOS };
     if (real) par.min_orig = real;
     return [par];
   }
   return lista.map(p => ({
     tom: p.tom,
-    min: p.min_orig || (p.min === MIN_TODOS ? "" : p.min) || "",
+    min: minsFromArray(p.mins),
   }));
 }
 
-// pares como o admin deve vê-los no modal: sempre o ministrante real
+// pares como o admin deve vê-los no modal: sempre os ministrantes reais,
+// agrupados por tom → { tom, mins:[...] }
 function paresParaEdicao(str) {
-  return deserializarPares(str).map(p => ({
-    tom: p.tom,
-    min: p.min_orig || (p.min === MIN_TODOS ? "" : p.min) || "",
-  }));
+  return deserializarPares(str).map(p => {
+    const real = p.min_orig || (p.min === MIN_TODOS ? "" : p.min) || "";
+    return { tom: p.tom, mins: minsToArray(real) };
+  });
 }
 
 // pares "efetivos": um tom marcado como Todos conta para
@@ -150,10 +174,11 @@ function paresEfetivos(m) {
   const pares = deserializarPares(m.tom);
   const out = [];
   pares.forEach(p => {
-    if (parEhTodos(p, pares)) {
+    const reais = minsReaisDoPar(p, pares);
+    if (reais === null) {
       MINISTRANTES.forEach(min => out.push({ tom: p.tom, min, auto: true }));
     } else {
-      out.push(p);
+      reais.forEach(min => out.push({ tom: p.tom, min }));
     }
   });
   return out;
@@ -168,98 +193,19 @@ function tonsParaHTML(m, expandir = true) {
     return `<div class="card-ton-row"><span class="card-badge">${esc(m.tom || "—")}</span></div>`;
   }
 
-  const info = tomMaisUsado(m); // tom mais cantado, vindo do histórico
-
   return pares.map(p => {
-    const todos = expandir && parEhTodos(p, pares);
-    const label = todos ? MIN_TODOS : p.min;
-    const chip  = todos ? "chip-todos" : (CHIP_CLASS[p.min] || "");
+    const reais = expandir ? minsReaisDoPar(p, pares) : minsToArray(p.min);
+
+    const chipsHTML = (reais === null)
+      ? `<span class="card-min-label chip-todos">${MIN_TODOS}</span>`
+      : reais.map(n => `<span class="card-min-label ${CHIP_CLASS[n] || ""}">${esc(n)}</span>`).join("");
+
     return `
       <div class="card-ton-row">
         <span class="card-badge">${esc(p.tom)}</span>
-        <span class="ton-row-right">
-          ${label ? `<span class="card-min-label ${chip}">${esc(label)}</span>` : ""}
-          ${seloTom(info, p.tom)}
-        </span>
+        <span class="ton-row-right">${chipsHTML}</span>
       </div>`;
   }).join("");
-}
-
-// ============================================================
-//  HISTÓRICO — quais tons já foram cantados nos cultos
-// ============================================================
-
-const HIST_TABLE = "historico_louvores";
-let historico = [];
-
-// normaliza nome de música (ignora acentos, caixa e espaços duplicados)
-function normNome(s) {
-  return (s || "")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-async function carregarHistorico() {
-  try {
-    historico = await req(`${HIST_TABLE}?select=musica_id,nome,tom,data&order=data.desc`) || [];
-  } catch (e) {
-    // tabela ainda não criada: o app segue funcionando, só sem os selos
-    console.warn("Histórico indisponível:", e.message);
-    historico = [];
-  }
-}
-
-// quantas vezes cada tom desta música já foi cantado
-function contagemTons(m) {
-  const idKey   = m.id != null ? String(m.id) : null;
-  const nomeKey = normNome(m.nome);
-  const cont = {};
-  historico.forEach(h => {
-    if (!h.tom) return;
-    const bate = (idKey && h.musica_id && String(h.musica_id) === idKey)
-              || normNome(h.nome) === nomeKey;
-    if (bate) cont[h.tom] = (cont[h.tom] || 0) + 1;
-  });
-  return cont;
-}
-
-// { tom, vezes } do tom mais cantado; null quando não há histórico
-function tomMaisUsado(m) {
-  const cont = contagemTons(m);
-  let tom = null, vezes = 0;
-  for (const t in cont) {
-    if (cont[t] > vezes) { tom = t; vezes = cont[t]; }
-  }
-  return tom ? { tom, vezes } : null;
-}
-
-// grava no histórico os louvores de um culto que já aconteceu
-async function arquivarLouvores(cultoTipo, itens, ministrante) {
-  if (!itens.length) return;
-  const linhas = itens.map(l => ({
-    musica_id:   l.musica_id != null ? String(l.musica_id) : null,
-    nome:        l.nome,
-    tom:         l.tom || null,
-    ministrante: ministrante || null,
-    culto_tipo:  cultoTipo,
-    data:        l.data,
-  }));
-  try {
-    // on_conflict + ignore-duplicates: se outro celular já arquivou, não duplica
-    await req(`${HIST_TABLE}?on_conflict=nome,culto_tipo,data,tom`, {
-      method: "POST",
-      headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
-      body: JSON.stringify(linhas),
-    });
-  } catch (e) {
-    console.warn("Não consegui arquivar no histórico:", e.message);
-  }
-}
-
-// selo "mais usado" para uma linha de tom
-function seloTom(info, tom) {
-  if (!info || info.tom !== tom) return "";
-  return `<span class="tom-top" title="Tom mais cantado nos cultos">★ ${info.vezes}×</span>`;
 }
 
 // ============================================================
@@ -355,7 +301,7 @@ async function salvar() {
   // 1 tom → grava a tag "Todos"; 2+ → nomes reais
   const paresSalvar = normalizarParesParaSalvar(tomMinList);
   const tomStr = serializarPares(paresSalvar);
-  const minStr = [...new Set(paresSalvar.map(p => p.min).filter(Boolean))].join(", ");
+  const minStr = [...new Set(tomMinList.flatMap(p => p.mins))].join(", ");
 
   try {
     if (editandoId) {
@@ -398,37 +344,61 @@ async function excluir(id) {
 //  Tom + Min no modal
 // ============================================================
 
+// adiciona um ministrante a um tom. Se o tom já existe na lista,
+// o ministrante entra no MESMO bloco (não cria linha nova).
 function adicionarTomMin() {
   const tom = document.getElementById("fTom").value;
   const min = document.getElementById("fMin").value;
   if (!tom || !min) { toast("Selecione tom e ministrante antes de adicionar.", true); return; }
-  if (tomMinList.find(p => p.tom === tom)) {
-    toast(`Tom ${tom} já foi adicionado.`, true); return;
+
+  let entrada = tomMinList.find(p => p.tom === tom);
+  if (entrada) {
+    if (entrada.mins.includes(min)) {
+      toast(`${min} já está no tom ${tom}.`, true);
+      return;
+    }
+    entrada.mins.push(min);
+  } else {
+    tomMinList.push({ tom, mins: [min] });
   }
-  tomMinList.push({ tom, min });
+
   document.getElementById("fTom").value = "";
   document.getElementById("fMin").value = "";
   renderTomList();
 }
 
-function removerTomMin(idx) {
-  tomMinList.splice(idx, 1);
+// remove um ministrante específico de um tom; se era o último, o
+// bloco do tom inteiro some sozinho.
+function removerMinDoTom(tomIdx, minIdx) {
+  const entrada = tomMinList[tomIdx];
+  if (!entrada) return;
+  entrada.mins.splice(minIdx, 1);
+  if (!entrada.mins.length) tomMinList.splice(tomIdx, 1);
   renderTomList();
 }
 
 function renderTomList() {
   const container = document.getElementById("tomList");
   container.innerHTML = "";
-  tomMinList.forEach((p, i) => {
-    const chip = CHIP_CLASS[p.min] || "";
+
+  tomMinList.forEach((p, ti) => {
     const div = document.createElement("div");
     div.className = "tom-list-item";
+
+    const chipsHTML = p.mins.map((min, mi) => {
+      const chip = CHIP_CLASS[min] || "";
+      return `<span class="tom-list-min card-min-label ${chip}" style="display:inline-flex;align-items:center;gap:4px;">
+                ${esc(min)}
+                <button type="button" class="tom-list-remove" style="width:16px;height:16px;min-width:16px;font-size:10px;padding:0;line-height:1;"
+                  onclick="removerMinDoTom(${ti},${mi})" title="Remover ${esc(min)}">✕</button>
+              </span>`;
+    }).join("");
+
     div.innerHTML = `
-      <div class="tom-list-info">
+      <div class="tom-list-info" style="flex-wrap:wrap;gap:6px;align-items:center;">
         <span class="tom-list-badge">${esc(p.tom)}</span>
-        <span class="tom-list-min card-min-label ${chip}">${esc(p.min)}</span>
-      </div>
-      <button class="tom-list-remove" onclick="removerTomMin(${i})" title="Remover">✕</button>`;
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${chipsHTML}</div>
+      </div>`;
     container.appendChild(div);
   });
 
@@ -436,7 +406,7 @@ function renderTomList() {
   if (tomMinList.length === 1) {
     const aviso = document.createElement("div");
     aviso.className = "tom-list-hint";
-    aviso.textContent = "Só um tom cadastrado — ele será salvo como \"Todos\". Ao adicionar um segundo tom, o ministrante volta.";
+    aviso.textContent = "Só um tom cadastrado — ele será salvo como \"Todos\". Ao adicionar um segundo tom, o(s) ministrante(s) volta(m).";
     container.appendChild(aviso);
   }
 }
@@ -1036,13 +1006,6 @@ async function limparCultosExpirados() {
     // ── louvores ──
     if (dados.louvores && dados.louvores.length) {
       const antes = dados.louvores.length;
-
-      // o culto já aconteceu → guarda no histórico ANTES de apagar
-      const cantados = dados.louvores.filter(l => l.data && l.data < hoje);
-      if (cantados.length) {
-        await arquivarLouvores(def.tipo, cantados, dados.ministrante);
-      }
-
       // mantém só os que ainda não passaram (data do culto >= hoje)
       dados.louvores = dados.louvores.filter(l => l.data && l.data >= hoje);
       if (dados.louvores.length !== antes) mudou = true;
@@ -1311,6 +1274,8 @@ function filtrarMusicasCulto() {
     : `<div class="culto-empty">Nenhuma música encontrada.</div>`;
 }
 
+// ao escolher uma música do repertório, o tom já entra sozinho de acordo
+// com o ministrante ESCALADO neste culto (se houver um tom pra ele).
 function selecionarMusicaCulto(id) {
   const m = musicas.find(x => x.id == id);
   if (!m) return;
@@ -1320,22 +1285,30 @@ function selecionarMusicaCulto(id) {
     el.classList.toggle("sel", el.dataset.id == id);
   });
 
-  // popular dropdown de tom com os tons já cadastrados dessa música (só o tom, sem ministrante)
   const pares = deserializarPares(m.tom);
   const tonsUnicos = [...new Set(pares.map(p => p.tom).filter(Boolean))];
   const sel = document.getElementById("cTomEscolhido");
-  const info = tomMaisUsado(m); // tom mais cantado, vindo do histórico
   sel.innerHTML = `<option value="">Tom</option>` +
-    tonsUnicos.map(t => {
-      const marca = info && info.tom === t ? ` ★ (${info.vezes}×)` : "";
-      return `<option value="${esc(t)}">${esc(t)}${marca}</option>`;
-    }).join("");
+    tonsUnicos.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
   sel.onchange = null;
 
-  // já sugere o tom mais cantado; se só há um tom, seleciona ele
-  if (info && tonsUnicos.includes(info.tom)) sel.value = info.tom;
-  else if (tonsUnicos.length === 1) sel.value = tonsUnicos[0];
+  // ministrante escalado para este culto (definido no topo da coluna)
+  const escalado = cultos[cultoTipoAtual]?.ministrante || "";
+  let tomAuto = "";
 
+  if (escalado) {
+    // acha o par cujo tom vale pra esse ministrante (real ou "Todos")
+    const par = pares.find(p => {
+      const reais = minsReaisDoPar(p, pares);
+      return reais === null || reais.includes(escalado);
+    });
+    if (par) tomAuto = par.tom;
+  }
+
+  // fallback: só há um tom cadastrado
+  if (!tomAuto && tonsUnicos.length === 1) tomAuto = tonsUnicos[0];
+
+  sel.value = tomAuto;
   document.getElementById("cultoTomWrap").style.display = "";
 }
 
@@ -1378,7 +1351,7 @@ async function confirmarLouvorCulto() {
         toast(`"${nome}" já existia — usando o do repertório.`);
       } else {
         // nasce com um tom só → já grava a tag "Todos", guardando o nome real
-        const tomStr = serializarPares(normalizarParesParaSalvar([{ tom, min }]));
+        const tomStr = serializarPares(normalizarParesParaSalvar([{ tom, mins: [min] }]));
         const nova = await req(TABLE, {
           method: "POST",
           body: JSON.stringify({ nome, tom: tomStr, ministrante: min, observacoes: "" }),
@@ -1441,7 +1414,5 @@ onScrollBusca();
 
 (async () => {
   await carregar();          // repertório
-  await carregarCultos();    // cultos (arquiva no histórico o que já passou)
-  await carregarHistorico(); // lê o histórico já atualizado
-  render(musicas);           // re-renderiza os cards com o selo ★
+  await carregarCultos();    // cultos
 })();
