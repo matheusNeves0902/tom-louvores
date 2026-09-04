@@ -1314,3 +1314,61 @@
   opacity:0.5;pointer-events:none;
   font-size:13px;letter-spacing:0.02em;
 }
+
+
+/* ============================================================
+   COLE ISTO NO FIM DO style.css
+   ============================================================ */
+
+/* ——— Setas do leitor sem destino ——— */
+.lyra-btn:disabled{opacity:0.3;cursor:default}
+.lyra-btn:disabled:hover{background:var(--black5);border-color:var(--gray3)}
+.claro .lyra-btn:disabled:hover{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
+
+/* ——— iOS: 90vh conta a barra do Safari e corta o rodapé do modal ——— */
+.modal{max-height:90dvh}
+.lyra-box{max-height:92dvh}
+
+/* ============================================================
+   iPad e tablets — os modais preenchem a tela
+   (min-width 601px evita mexer no celular, pointer:coarse evita
+    mexer no desktop com a janela estreita)
+   ============================================================ */
+@media (min-width:601px) and (max-width:1180px) and (pointer:coarse){
+
+  .overlay-bg{
+    padding:0;
+    align-items:stretch;
+    justify-content:stretch;
+  }
+  .overlay-bg .modal{
+    width:100%;max-width:none;
+    height:100dvh;max-height:100dvh;
+    border:none;border-radius:0;
+  }
+  .modal-hd{padding-top:calc(24px + env(safe-area-inset-top))}
+  .modal-ft{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+
+  /* o conteúdo passa a ocupar a altura toda, em coluna centralizada
+     para a linha de texto não ficar larga demais */
+  .modal-bd{
+    flex:1;
+    width:100%;max-width:620px;
+    margin:0 auto;
+  }
+  .modal-hd,
+  .modal-ft{
+    width:100%;max-width:620px;
+    margin-left:auto;margin-right:auto;
+  }
+
+  /* leitor de cifra também em tela cheia no iPad */
+  #lyraOverlay{padding:0}
+  .lyra-box{
+    width:100%;max-width:none;
+    height:100dvh;max-height:100dvh;
+    border:none;border-radius:0;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+}
