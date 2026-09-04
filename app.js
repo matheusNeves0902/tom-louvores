@@ -446,7 +446,20 @@ function renderCifraList() {
   });
 }
 
+// ============================================================
+//  Grade do repertório
+// ============================================================
 
+// ícones das plataformas. Na grade eles são monocromáticos: dizem
+// "existe link", sem disputar atenção com o amarelo do tom. A cor
+// da marca aparece só nos botões grandes, dentro do modal.
+const ICO_PLATAFORMA = {
+  youtube: `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>`,
+
+  spotify: `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.5 17.3a.75.75 0 0 1-1.03.25c-2.82-1.72-6.37-2.11-10.56-1.16a.75.75 0 1 1-.33-1.46c4.58-1.05 8.5-.6 11.67 1.34.35.22.46.68.25 1.03zm1.47-3.27a.94.94 0 0 1-1.29.31c-3.23-1.98-8.15-2.56-11.97-1.4a.94.94 0 1 1-.55-1.8c4.36-1.32 9.78-.68 13.49 1.6.44.27.58.85.32 1.29zm.13-3.4C15.73 8.45 8.4 8.2 4.62 9.35a1.12 1.12 0 1 1-.65-2.15c4.34-1.32 12.43-1.06 16.5 1.36a1.12 1.12 0 0 1-1.15 1.93z"/></svg>`,
+
+  cifra: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>`,
+};
 
 function render(lista) {
   const grid  = document.getElementById("grid");
@@ -480,9 +493,9 @@ function render(lista) {
       : "";
 
     const tagsHTML = (temYt || temSp || temCf) ? `<div class="card-tags">
-        ${temYt ? `<span class="card-yt-tag" title="YouTube">▶ YT</span>` : ""}
-        ${temSp ? `<span class="card-yt-tag card-sp-tag" title="Spotify">Spotify</span>` : ""}
-        ${temCf ? `<span class="card-yt-tag card-cf-tag" title="Cifra">Cifra</span>` : ""}
+        ${temYt ? `<span class="card-ico" title="Tem vídeo no YouTube">${ICO_PLATAFORMA.youtube}</span>` : ""}
+        ${temSp ? `<span class="card-ico" title="Tem áudio no Spotify">${ICO_PLATAFORMA.spotify}</span>` : ""}
+        ${temCf ? `<span class="card-ico" title="Tem cifra">${ICO_PLATAFORMA.cifra}</span>` : ""}
       </div>` : "";
 
     div.innerHTML = `

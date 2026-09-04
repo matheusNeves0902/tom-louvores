@@ -1372,3 +1372,245 @@
     padding-bottom:env(safe-area-inset-bottom);
   }
 }
+
+/* ============================================================
+   COLE ISTO NO FIM DO style.css
+
+   Regra que passa a valer: cada cor tem UM dono.
+     amarelo  → tom, data, ação principal. Nada mais.
+     vermelho → só YouTube      (só dentro do modal de leitura)
+     verde    → só Spotify      (só dentro do modal de leitura)
+     âmbar    → só cifra        (só dentro do modal e do leitor)
+   Ministrante deixa de ser um bloco colorido e vira um ponto de
+   6px num chip neutro: dá para reconhecer a pessoa de relance
+   sem competir com o amarelo do tom.
+   ============================================================ */
+
+/* ——— Ministrantes: chip neutro + ponto de identidade ——— */
+.card-min-label,
+.tom-list-min.card-min-label{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.09);
+  color:#C4C4C4;
+  display:inline-flex;align-items:center;
+}
+.card-min-label::before{
+  content:"";
+  width:6px;height:6px;border-radius:50%;
+  background:var(--min,#7A7A7A);
+  margin-right:7px;flex-shrink:0;
+}
+
+/* só a cor do ponto muda de pessoa para pessoa */
+.chip-Raphaela{--min:#F2789F}   /* rosa      */
+.chip-Daniela {--min:#6BA8F5}   /* azul      */
+.chip-Cris    {--min:#4FD1C5}   /* turquesa  */
+.chip-Mirian  {--min:#C084FC}   /* violeta   */
+.chip-Humberto{--min:#F97B5B}   /* coral     */
+
+/* "Todos" não é pessoa: é informação. Fica sem ponto e sem cor. */
+.chip-todos{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.10);
+  color:#9A9A9A;
+  text-transform:uppercase;
+  font-size:10px;letter-spacing:0.1em;
+}
+.chip-todos::before{display:none}
+
+/* o mesmo ponto no ministrante escalado do culto */
+.culto-escala-nome{
+  display:inline-flex;align-items:center;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.09);
+  color:#D6D6D6;
+}
+.culto-escala-nome::before{
+  content:"";
+  width:6px;height:6px;border-radius:50%;
+  background:var(--min,#7A7A7A);
+  margin-right:7px;flex-shrink:0;
+}
+.culto-escala-vazio{color:var(--gray2)}
+.culto-escala-vazio::before{display:none}
+
+/* ——— YouTube / Spotify / Cifra viram ícones ——— */
+/* na grade eles são só sinal de "existe": monocromáticos, discretos.
+   A cor da marca aparece nos botões grandes dentro do modal.       */
+.card-ico{
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#5F5F5F;transition:color 0.2s;
+}
+.card:hover .card-ico{color:#8C8C8C}
+.card-tags{gap:9px}
+
+/* ——— Rótulos de seção do culto: hierarquia, não cor ——— */
+.culto-secao-label,
+.culto-secao-pos .culto-secao-label{
+  color:var(--gray2);
+  font-size:9px;letter-spacing:0.16em;
+}
+.culto-secao-pos .culto-add-btn:hover{
+  border-color:var(--gray3);color:var(--gray);
+  background:rgba(255,255,255,0.02);
+}
+
+/* ——— Setas do leitor sem destino ——— */
+.lyra-btn:disabled{opacity:0.3;cursor:default}
+.lyra-btn:disabled:hover{background:var(--black5);border-color:var(--gray3)}
+.claro .lyra-btn:disabled:hover{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
+
+/* ——— iOS: 90vh conta a barra do Safari e corta o rodapé ——— */
+.modal{max-height:90dvh}
+.lyra-box{max-height:92dvh}
+
+/* ============================================================
+   iPad e tablets — os modais preenchem a tela
+   ============================================================ */
+@media (min-width:601px) and (max-width:1180px) and (pointer:coarse){
+
+  .overlay-bg{padding:0;align-items:stretch;justify-content:stretch}
+  .overlay-bg .modal{
+    width:100%;max-width:none;
+    height:100dvh;max-height:100dvh;
+    border:none;border-radius:0;
+  }
+  .modal-hd{padding-top:calc(24px + env(safe-area-inset-top))}
+  .modal-ft{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+
+  .modal-hd,.modal-bd,.modal-ft{
+    width:100%;max-width:620px;
+    margin-left:auto;margin-right:auto;
+  }
+  .modal-bd{flex:1}
+
+  #lyraOverlay{padding:0}
+  .lyra-box{
+    width:100%;max-width:none;
+    height:100dvh;max-height:100dvh;
+    border:none;border-radius:0;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+}
+
+/* ============================================================
+   COLE ISTO NO FIM DO style.css
+
+   Regra que passa a valer: cada cor tem UM dono.
+     amarelo  → tom, data, ação principal. Nada mais.
+     vermelho → só YouTube      (só dentro do modal de leitura)
+     verde    → só Spotify      (só dentro do modal de leitura)
+     âmbar    → só cifra        (só dentro do modal e do leitor)
+   Ministrante deixa de ser um bloco colorido e vira um ponto de
+   6px num chip neutro: dá para reconhecer a pessoa de relance
+   sem competir com o amarelo do tom.
+   ============================================================ */
+
+/* ——— Ministrantes: chip neutro + ponto de identidade ——— */
+.card-min-label,
+.tom-list-min.card-min-label{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.09);
+  color:#C4C4C4;
+  display:inline-flex;align-items:center;
+}
+.card-min-label::before{
+  content:"";
+  width:6px;height:6px;border-radius:50%;
+  background:var(--min,#7A7A7A);
+  margin-right:7px;flex-shrink:0;
+}
+
+/* só a cor do ponto muda de pessoa para pessoa */
+.chip-Raphaela{--min:#F2789F}   /* rosa      */
+.chip-Daniela {--min:#6BA8F5}   /* azul      */
+.chip-Cris    {--min:#4FD1C5}   /* turquesa  */
+.chip-Mirian  {--min:#C084FC}   /* violeta   */
+.chip-Humberto{--min:#F97B5B}   /* coral     */
+
+/* "Todos" não é pessoa: é informação. Fica sem ponto e sem cor. */
+.chip-todos{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.10);
+  color:#9A9A9A;
+  text-transform:uppercase;
+  font-size:10px;letter-spacing:0.1em;
+}
+.chip-todos::before{display:none}
+
+/* o mesmo ponto no ministrante escalado do culto */
+.culto-escala-nome{
+  display:inline-flex;align-items:center;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.09);
+  color:#D6D6D6;
+}
+.culto-escala-nome::before{
+  content:"";
+  width:6px;height:6px;border-radius:50%;
+  background:var(--min,#7A7A7A);
+  margin-right:7px;flex-shrink:0;
+}
+.culto-escala-vazio{color:var(--gray2)}
+.culto-escala-vazio::before{display:none}
+
+/* ——— YouTube / Spotify / Cifra viram ícones ——— */
+/* na grade eles são só sinal de "existe": monocromáticos, discretos.
+   A cor da marca aparece nos botões grandes dentro do modal.       */
+.card-ico{
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#5F5F5F;transition:color 0.2s;
+}
+.card:hover .card-ico{color:#8C8C8C}
+.card-tags{gap:9px}
+
+/* ——— Rótulos de seção do culto: hierarquia, não cor ——— */
+.culto-secao-label,
+.culto-secao-pos .culto-secao-label{
+  color:var(--gray2);
+  font-size:9px;letter-spacing:0.16em;
+}
+.culto-secao-pos .culto-add-btn:hover{
+  border-color:var(--gray3);color:var(--gray);
+  background:rgba(255,255,255,0.02);
+}
+
+/* ——— Setas do leitor sem destino ——— */
+.lyra-btn:disabled{opacity:0.3;cursor:default}
+.lyra-btn:disabled:hover{background:var(--black5);border-color:var(--gray3)}
+.claro .lyra-btn:disabled:hover{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
+
+/* ——— iOS: 90vh conta a barra do Safari e corta o rodapé ——— */
+.modal{max-height:90dvh}
+.lyra-box{max-height:92dvh}
+
+/* ============================================================
+   iPad e tablets — os modais preenchem a tela
+   ============================================================ */
+@media (min-width:601px) and (max-width:1180px) and (pointer:coarse){
+
+  .overlay-bg{padding:0;align-items:stretch;justify-content:stretch}
+  .overlay-bg .modal{
+    width:100%;max-width:none;
+    height:100dvh;max-height:100dvh;
+    border:none;border-radius:0;
+  }
+  .modal-hd{padding-top:calc(24px + env(safe-area-inset-top))}
+  .modal-ft{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+
+  .modal-hd,.modal-bd,.modal-ft{
+    width:100%;max-width:620px;
+    margin-left:auto;margin-right:auto;
+  }
+  .modal-bd{flex:1}
+
+  #lyraOverlay{padding:0}
+  .lyra-box{
+    width:100%;max-width:none;
+    height:100dvh;max-height:100dvh;
+    border:none;border-radius:0;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+}
