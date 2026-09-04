@@ -21,6 +21,10 @@
      --gray3:  #333;
      --white:  #FFFFFF;
      --r: 6px;
+
+     /* leitor de cifras e letras */
+     --cifra:       #EE9E63;   /* acordes e destaques no fundo escuro */
+     --cifra-claro: #C2410C;   /* mesma função no fundo claro */
    }
 
    body{
@@ -982,6 +986,213 @@
      font-size:11px;color:var(--gray2);margin-top:8px;font-style:italic;
    }
 
+   /* ============================================================
+      SELETOR DE CULTO
+      ============================================================ */
+   .culto-seletor{
+     display:flex;align-items:center;gap:10px;
+     margin-bottom:14px;
+   }
+   .culto-seletor-data{
+     flex-shrink:0;
+     font-family:'Inter',sans-serif;
+     font-size:13px;font-weight:800;letter-spacing:0.02em;
+     color:var(--yellow);line-height:1;
+     display:inline-flex;align-items:center;justify-content:center;
+     background:rgba(255,224,0,0.08);
+     border:1px solid rgba(255,224,0,0.25);
+     padding:12px 14px;border-radius:var(--r);
+     min-width:64px;
+   }
+   .culto-seletor-sel{
+     flex:1;min-width:0;color:var(--white);font-weight:600;
+   }
+   /* com um culto só na tela, ele ocupa a largura inteira */
+   .cultos-grid.solo{grid-template-columns:1fr}
+
+   /* ============================================================
+      LEITOR DE CIFRAS E LETRAS
+      ============================================================ */
+
+   /* Botões no modal de leitura */
+   .view-lyra{
+     display:flex;flex-direction:column;gap:8px;margin-top:12px;
+   }
+   .view-lyra .view-yt-btn{
+     width:100%;box-sizing:border-box;
+     display:flex;align-items:center;justify-content:center;gap:9px;
+   }
+
+   /* Overlay */
+   #lyraOverlay{
+     position:fixed;inset:0;z-index:9000;
+     display:none;align-items:center;justify-content:center;
+     padding:16px;
+     background:rgba(0,0,0,0.82);
+     backdrop-filter:blur(3px);
+   }
+   #lyraOverlay.open{display:flex}
+   /* com o leitor aberto, a página atrás não rola */
+   body.lyra-travado{overflow:hidden}
+
+   .lyra-box{
+     width:100%;max-width:760px;max-height:92vh;
+     display:flex;flex-direction:column;overflow:hidden;
+     background:#0d0d0d;
+     border:1px solid rgba(255,255,255,0.10);
+     border-radius:14px;
+   }
+
+   /* Cabeçalho */
+   .lyra-hd{
+     display:flex;align-items:center;justify-content:space-between;gap:12px;
+     padding:14px 16px 12px;
+   }
+   .lyra-hd-txt{min-width:0}
+   .lyra-hd h3{
+     margin:0;font-size:17px;font-weight:800;letter-spacing:0.02em;
+     color:#f2f2f2;
+     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+   }
+   .lyra-hd p{
+     margin:3px 0 0;font-size:12px;font-weight:500;color:var(--gray);
+     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+   }
+   .lyra-hd-acoes{display:flex;align-items:center;gap:6px;flex-shrink:0}
+   .lyra-x{
+     background:none;border:none;cursor:pointer;
+     color:var(--gray);font-size:19px;line-height:1;
+     padding:4px 6px;margin-left:2px;
+   }
+   .lyra-x:hover{color:#e6e6e6}
+
+   /* Barra de controles — cada grupo quebra inteiro,
+      nunca solta um botão sozinho na linha */
+   .lyra-barra{
+     display:flex;flex-wrap:wrap;align-items:center;
+     gap:10px;padding:12px 16px;justify-content:space-between;
+     border-top:1px solid rgba(255,255,255,0.07);
+     border-bottom:1px solid rgba(255,255,255,0.07);
+   }
+   .lyra-grupo{
+     display:flex;align-items:center;gap:8px;flex-wrap:nowrap;
+     flex:1 1 260px;min-width:0;
+   }
+   .lyra-grupo > .lyra-seg{flex:1;min-width:0}
+   .lyra-grupo > .lyra-btn{flex:0 0 auto;min-width:46px}
+   .lyra-lbl{font-size:13px;font-weight:600;color:var(--gray);flex:0 0 auto}
+
+   .lyra-seg{
+     display:inline-flex;align-items:center;overflow:hidden;
+     background:var(--black5);
+     border:1px solid var(--gray3);
+     border-radius:11px;
+   }
+   .lyra-seg button{
+     background:none;border:none;cursor:pointer;
+     font-family:'Inter',sans-serif;font-size:13px;font-weight:800;
+     color:#c8c8c8;padding:0 16px;height:40px;
+     flex:1;min-width:0;white-space:nowrap;
+     transition:background 0.15s,color 0.15s;
+   }
+   .lyra-seg button:hover{background:rgba(255,255,255,0.09);color:var(--white)}
+   .lyra-seg button.on{background:var(--cifra);color:#1a1a1a}
+   .lyra-seg button.on:hover{background:var(--cifra)}
+   .lyra-seg .lyra-pct{
+     padding:0 6px;flex:0 0 auto;
+     border-left:1px solid var(--gray3);
+     border-right:1px solid var(--gray3);
+   }
+   .lyra-pct{
+     font-size:12px;font-weight:700;color:#c8c8c8;
+     min-width:56px;text-align:center;line-height:40px;user-select:none;
+   }
+
+   /* Seletor de tom */
+   .lyra-grupo-tom{display:inline-flex;align-items:center;gap:8px;flex:1;min-width:0}
+   .lyra-tom{position:relative;display:inline-flex;align-items:center;flex:1;min-width:0}
+   .lyra-tom select{
+     -webkit-appearance:none;appearance:none;border:none;cursor:pointer;
+     background:var(--cifra);color:#1a1a1a;
+     font-family:'Inter',sans-serif;font-size:16px;font-weight:800;
+     padding:9px 34px 9px 16px;border-radius:11px;
+     width:100%;height:40px;
+   }
+   .lyra-tom select:focus-visible{outline:2px solid var(--white);outline-offset:2px}
+   .lyra-tom svg{position:absolute;right:12px;pointer-events:none;color:#1a1a1a}
+
+   .lyra-btn{
+     display:inline-flex;align-items:center;justify-content:center;
+     background:var(--black5);
+     border:1px solid var(--gray3);
+     color:#f0f0f0;border-radius:11px;cursor:pointer;
+     font-family:'Inter',sans-serif;font-size:14px;font-weight:800;
+     min-width:46px;height:40px;padding:0 12px;
+     transition:background 0.15s,color 0.15s,border-color 0.15s;
+   }
+   .lyra-btn:hover{background:#3A3A3A;border-color:var(--gray2)}
+   .lyra-btn.on{background:var(--cifra);border-color:var(--cifra);color:#1a1a1a}
+   .lyra-btn.on:hover{background:var(--cifra)}
+   .lyra-btn:focus-visible{outline:2px solid var(--cifra);outline-offset:2px}
+
+   /* Corpo: cifra e letra */
+   .lyra-corpo{overflow:auto;overscroll-behavior:contain;padding:18px 16px 28px;flex:1}
+   .lyra-pre{
+     margin:0;white-space:pre;line-height:1.55;
+     font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+   }
+   .lyra-pre.quebra{white-space:pre-wrap;overflow-wrap:anywhere}
+   .lyra-pre.letra{
+     white-space:pre-wrap;line-height:1.75;font-weight:500;
+     font-family:'Inter',sans-serif;
+   }
+   .lyra-acordes,.lyra-secao{color:var(--cifra);font-weight:700}
+   .lyra-letra{color:#c6c6c6}
+   .lyra-msg{
+     padding:34px 18px;text-align:center;
+     color:var(--gray);font-size:13px;font-weight:600;
+   }
+
+   /* Modo claro */
+   .lyra-box.claro{background:#FAF9F7;border-color:rgba(0,0,0,0.14)}
+   .claro .lyra-hd h3{color:#141414}
+   .claro .lyra-hd p{color:#6b6b6b}
+   .claro .lyra-x{color:#767676}
+   .claro .lyra-x:hover{color:#111}
+   .claro .lyra-barra{border-color:rgba(0,0,0,0.10)}
+   .claro .lyra-lbl,
+   .claro .lyra-pct{color:#5f5f5f}
+   .claro .lyra-btn{background:#E4DFD8;border-color:rgba(0,0,0,0.16);color:#242424}
+   .claro .lyra-btn:hover{background:#D8D2C9;border-color:rgba(0,0,0,0.28)}
+   .claro .lyra-btn.on,
+   .claro .lyra-btn.on:hover{
+     background:var(--cifra-claro);border-color:var(--cifra-claro);color:var(--white);
+   }
+   .claro .lyra-seg{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
+   .claro .lyra-seg .lyra-pct{border-color:rgba(0,0,0,0.14)}
+   .claro .lyra-seg button{color:#5f5f5f}
+   .claro .lyra-seg button:hover{background:rgba(0,0,0,0.05);color:#141414}
+   .claro .lyra-seg button.on,
+   .claro .lyra-seg button.on:hover{background:var(--cifra-claro);color:var(--white)}
+   .claro .lyra-tom select{background:var(--cifra-claro);color:var(--white)}
+   .claro .lyra-tom svg{color:var(--white)}
+   .claro .lyra-acordes,
+   .claro .lyra-secao{color:var(--cifra-claro)}
+   .claro .lyra-letra{color:#242424}
+   .claro .lyra-msg{color:#6b6b6b}
+
+   /* Celular: leitor ocupa a tela inteira */
+   @media(max-width:600px){
+     #lyraOverlay{padding:0}
+     .lyra-box{
+       max-width:none;max-height:100vh;height:100vh;
+       border:none;border-radius:0;
+     }
+     .lyra-barra{gap:9px;padding:11px 14px}
+     .lyra-grupo{gap:7px}
+     .lyra-seg button{padding:0 14px}
+   }
+
    /* ——— RESPONSIVE ——— */
    @media(max-width:768px){
      /* abaixo de 768px: busca em cima (fixa sozinha), filtros embaixo meio a meio */
@@ -1055,3 +1266,16 @@
      #statusTxt{display:none}
      .login-box{padding:28px 20px 22px}
    }
+
+   /* ——— Limpar a busca ——— */
+   .search-wrap .inp-search{padding-right:38px}
+   .search-clear{
+     position:absolute;right:9px;top:50%;transform:translateY(-50%);
+     width:24px;height:24px;
+     display:none;align-items:center;justify-content:center;
+     background:transparent;border:none;cursor:pointer;
+     color:var(--gray2);font-size:12px;line-height:1;
+     border-radius:4px;transition:color 0.15s,background 0.15s;
+   }
+   .search-clear.on{display:flex}
+   .search-clear:hover{color:var(--white);background:var(--black4)}
