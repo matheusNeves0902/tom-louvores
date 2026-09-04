@@ -349,6 +349,34 @@ function lyraPreCarregarCultos() {
 const LYRA_DISCO_PREFIXO = "lyra_m_";
 const LYRA_DISCO_INDICE  = "lyra_baixadas_v1";
 
+// quanto foi baixado de verdade (bytes na rede, já comprimidos
+// pelo servidor) e quanto está ocupado no aparelho
+let lyraBytesBaixados = 0;
+
+function lyraContarBytes(url) {
+  try {
+    const e = performance.getEntriesByName(url).pop();
+    if (!e) return;
+    lyraBytesBaixados += e.transferSize || e.encodedBodySize || 0;
+  } catch (err) { /* navegador sem Performance API */ }
+}
+
+function lyraEspacoUsado() {
+  let n = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(LYRA_DISCO_PREFIXO)) n += (localStorage.getItem(k) || "").length;
+    }
+  } catch (e) { /* sem acesso */ }
+  return n;
+}
+
+function lyraKB(bytes) {
+  if (!bytes) return "0 KB";
+  return bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`;
+}
+
 const lyraTemCompressao =
   typeof CompressionStream !== "undefined" && typeof DecompressionStream !== "undefined";
 
@@ -527,9 +555,11 @@ function lyraAtualizarBotaoBaixar(txt) {
              : "Baixar cifras"
   );
 
+  const ocupado = lyraEspacoUsado();
   btn.title = tudo
-    ? `${salvas} músicas guardadas neste aparelho. Toque para atualizar.`
-    : "Guardar todas as cifras neste aparelho, para abrir sem internet.";
+    ? `${salvas} músicas guardadas neste aparelho (${lyraKB(ocupado)}). Toque para atualizar.`
+    : `Guardar todas as cifras neste aparelho, para abrir sem internet.` +
+      (ocupado ? ` Já guardadas: ${lyraKB(ocupado)}.` : "");
 }
 
 async function lyraBaixarTudo() {
@@ -546,6 +576,7 @@ async function lyraBaixarTudo() {
 
   const btn = document.getElementById("lyraBaixar");
   lyraBaixando = true;
+  lyraBytesBaixados = 0;
   if (btn) btn.disabled = true;
 
   let ok = 0, falhas = 0, cheio = false;
@@ -571,9 +602,11 @@ async function lyraBaixarTudo() {
   if (btn) btn.disabled = false;
   lyraAtualizarBotaoBaixar();
 
+  const baixado = lyraBytesBaixados ? ` · ${lyraKB(lyraBytesBaixados)} baixados` : "";
+
   if (cheio)       toast(`Armazenamento cheio. ${ok} de ${slugs.length} salvas.`, true);
   else if (falhas) toast(`${ok} salvas, ${falhas} sem conexão.`, true);
-  else             toast(`${ok} ${ok === 1 ? "cifra guardada" : "cifras guardadas"} ✓`);
+  else             toast(`${ok} ${ok === 1 ? "cifra guardada" : "cifras guardadas"} ✓${baixado}`);
 }
 
 if (document.readyState === "loading") {
@@ -614,9 +647,11 @@ async function lyraCarregarMusica(slug) {
       return salva;
     }
 
-    const r = await fetch(`${LYRA_API}/songs/${slug}?include=all_keys`);
+    const url = `${LYRA_API}/songs/${slug}?include=all_keys`;
+    const r = await fetch(url);
     if (!r.ok) throw new Error(`Resposta ${r.status}`);
     const d = await r.json();
+    lyraContarBytes(url);
 
     const porTom = new Map();
     (d.keys || []).forEach(k => {

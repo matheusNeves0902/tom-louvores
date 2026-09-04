@@ -1,13 +1,21 @@
 /* ============================================================
    TOM LOUVORES — INVB — style.css
+
+   Cada cor tem um dono:
+     amarelo  → tom, data, ação principal
+     vermelho → YouTube        (só nos botões do modal)
+     verde    → Spotify        (só nos botões do modal)
+     âmbar    → cifra          (modal e leitor)
+   Ministrante não é bloco colorido: é um chip neutro de largura
+   fixa com um ponto de 6px na cor da pessoa.
    ============================================================ */
 
    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap');
 
    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
+   
    html{overflow-x:clip}
-
+   
    :root{
      --black:  #0A0A0A;
      --black2: #111111;
@@ -21,12 +29,15 @@
      --gray3:  #333;
      --white:  #FFFFFF;
      --r: 6px;
-
+   
+     /* largura única dos chips de ministrante */
+     --chip-w: 116px;
+   
      /* leitor de cifras e letras */
      --cifra:       #EE9E63;   /* acordes e destaques no fundo escuro */
      --cifra-claro: #C2410C;   /* mesma função no fundo claro */
    }
-
+   
    body{
      font-family:'Inter',sans-serif;
      background:var(--black);
@@ -35,12 +46,15 @@
      touch-action:manipulation;
      -webkit-text-size-adjust:100%;
    }
-
-   /* ——— HEADER ——— */
+   
+   /* ============================================================
+      HEADER
+      ============================================================ */
    .header{
      background:var(--black);
      border-bottom:1px solid var(--black4);
      position:sticky;top:0;z-index:100;
+     padding-top:env(safe-area-inset-top);   /* notch, com app instalado */
    }
    .header-inner{
      max-width:1280px;margin:0 auto;
@@ -48,16 +62,7 @@
      display:flex;align-items:center;justify-content:space-between;
    }
    .logo{display:flex;align-items:center;gap:12px}
-   .logo-img{
-     height:30px;width:auto;
-     mix-blend-mode:screen;
-   }
-   .logo-wordmark{
-     font-family:'Bebas Neue',sans-serif;
-     font-size:28px;letter-spacing:0.06em;
-     line-height:1;color:var(--white);
-   }
-   .logo-wordmark span{color:var(--yellow)}
+   .logo-img{height:30px;width:auto;mix-blend-mode:screen}
    .logo-sep{width:1px;height:28px;background:var(--black5)}
    .logo-sub{
      font-size:10px;font-weight:600;
@@ -65,7 +70,7 @@
      text-transform:uppercase;line-height:1.3;
    }
    .header-right{display:flex;align-items:center;gap:10px}
-
+   
    .status-pill{
      display:flex;align-items:center;gap:7px;
      padding:6px 12px;
@@ -84,7 +89,7 @@
      animation:blink 2s ease infinite;flex-shrink:0;
    }
    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-
+   
    .btn-add{
      display:flex;align-items:center;gap:8px;
      padding:10px 20px;
@@ -99,8 +104,28 @@
    }
    .btn-add:hover{background:var(--yellow2)}
    .btn-add:active{transform:scale(0.98)}
-
-   /* ——— HERO OUTER (full-width background) ——— */
+   
+   /* botão Sair e afins no header */
+   .btn-logout{
+     padding:9px 16px;
+     border:1px solid var(--black5);
+     border-radius:var(--r);
+     background:transparent;
+     font-family:'Inter',sans-serif;
+     font-size:12px;font-weight:700;
+     letter-spacing:0.05em;text-transform:uppercase;
+     cursor:pointer;color:var(--gray);
+     transition:all 0.15s;
+   }
+   .btn-logout:hover{
+     background:var(--black3);
+     color:var(--white);
+     border-color:var(--gray3);
+   }
+   
+   /* ============================================================
+      HERO
+      ============================================================ */
    .hero-outer{
      background:url('image.jpg') center 30% / cover no-repeat;
      position:relative;
@@ -112,8 +137,6 @@
      background:rgba(0,0,0,0.76);
      pointer-events:none;
    }
-
-   /* ——— HERO (inner content container) ——— */
    .hero{
      max-width:1280px;margin:0 auto;
      padding:52px 36px 40px;
@@ -121,14 +144,11 @@
      gap:48px;align-items:end;
      position:relative;z-index:1;
    }
-
-   /* ——— HERO RIGHT COLUMN (brand logo + stats) ——— */
    .hero-right-col{
      display:flex;flex-direction:column;
      align-items:center;gap:20px;
      align-self:end;
    }
-
    .hero-tag{
      display:inline-flex;align-items:center;gap:8px;
      background:var(--yellow);
@@ -175,9 +195,10 @@
      color:var(--gray2);letter-spacing:0.1em;
      text-transform:uppercase;
    }
-
-   /* ——— TOOLBAR ——— */
-   /* base (>=768px): tudo numa linha, barra INTEIRA fixa ao rolar */
+   
+   /* ============================================================
+      TOOLBAR — busca e filtros
+      ============================================================ */
    .toolbar{
      max-width:1280px;margin:28px auto 0;padding:8px 36px;
      display:flex;gap:10px;align-items:center;
@@ -185,27 +206,15 @@
      background:var(--black);
      transition:box-shadow 0.2s,border-color 0.2s;
    }
-   .toolbar.stuck{
-     /* border-bottom:1px solid var(--black4); */
-     box-shadow:0 6px 20px rgba(0,0,0,0.4);
-
+   .toolbar.stuck{box-shadow:0 6px 20px rgba(0,0,0,0.4)}
+   .toolbar.stuck::after{
+     content:'';
+     position:absolute;bottom:0;
+     left:36px;right:36px;   /* alinhado ao padding lateral da toolbar */
+     height:1px;background:var(--black4);
    }
-
-   .toolbar.stuck::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 36px;  /* mesmo valor do padding lateral da toolbar */
-    right: 36px;
-    height: 1px;
-    background: var(--black4);
-  }
-   .search-row{
-     flex:1;min-width:0;display:flex;
-   }
-   .filtros-row{
-     display:flex;gap:10px;align-items:center;flex-shrink:0;
-   }
+   .search-row{flex:1;min-width:0;display:flex}
+   .filtros-row{display:flex;gap:10px;align-items:center;flex-shrink:0}
    .search-wrap{flex:1;min-width:0;position:relative}
    .search-ico{
      position:absolute;left:13px;top:50%;transform:translateY(-50%);
@@ -216,50 +225,54 @@
      background:var(--black2);
      border:1px solid var(--black5);
      color:var(--white);
-     padding:11px 14px 11px 38px;
+     padding:11px 38px 11px 38px;
      border-radius:var(--r);
      font-family:'Inter',sans-serif;font-size:13px;
      outline:none;transition:border-color 0.2s;
    }
    .inp-search:focus{border-color:var(--yellow)}
    .inp-search::placeholder{color:var(--gray2)}
+   
+   .search-clear{
+     position:absolute;right:9px;top:50%;transform:translateY(-50%);
+     width:24px;height:24px;
+     display:none;align-items:center;justify-content:center;
+     background:transparent;border:none;cursor:pointer;
+     color:var(--gray2);font-size:12px;line-height:1;
+     border-radius:4px;transition:color 0.15s,background 0.15s;
+   }
+   .search-clear.on{display:flex}
+   .search-clear:hover{color:var(--white);background:var(--black4)}
+   
    .sel{
-    background:var(--black2);
-    border:1px solid var(--black5);
-    color:var(--gray);
-    padding:11px 38px 11px 14px;border-radius:var(--r);
-    font-family:'Inter',sans-serif;font-size:13px;
-    outline:none;cursor:pointer;
-    transition:border-color 0.2s;min-width:165px;
-    /* remove a seta nativa e usa uma customizada, afastada da borda */
-    -webkit-appearance:none;-moz-appearance:none;appearance:none;
-    background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;
-    background-position:right 14px center;
+     background:var(--black2);
+     border:1px solid var(--black5);
+     color:var(--gray);
+     padding:11px 38px 11px 14px;border-radius:var(--r);
+     font-family:'Inter',sans-serif;font-size:13px;
+     outline:none;cursor:pointer;
+     transition:border-color 0.2s;min-width:165px;
+     /* seta própria, afastada da borda */
+     -webkit-appearance:none;-moz-appearance:none;appearance:none;
+     background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+     background-repeat:no-repeat;
+     background-position:right 14px center;
    }
    .sel:focus{border-color:var(--yellow)}
    .sel option{background:var(--black2);color:var(--white)}
-   .count-badge{
-     font-size:11px;font-weight:600;
-     color:var(--yellow);
-     background:rgba(255,224,0,0.1);
-     border:1px solid rgba(255,224,0,0.25);
-     padding:5px 12px;border-radius:2px;
-     letter-spacing:0.06em;white-space:nowrap;
-     text-transform:uppercase;
-   }
-
-   /* ——— GRID ——— */
+   
+   /* ============================================================
+      GRADE E CARDS
+      ============================================================ */
    .grid-wrap{max-width:1280px;margin:20px auto 80px;padding:0}
    .grid{
      display:grid;
      grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
      gap:12px;
-     margin: 28px auto 0px;
-     padding: 8px 36px;
+     margin:28px auto 0;
+     padding:8px 36px;
    }
-
-   /* ——— CARD ——— */
+   
    .card{
      background:var(--black2);
      border:1px solid var(--black4);
@@ -280,6 +293,7 @@
    .card:hover::before{background:var(--yellow)}
    .card-editable{cursor:pointer}
    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+   
    .act-btn.del{
      width:26px;height:26px;flex-shrink:0;
      background:transparent;
@@ -291,7 +305,7 @@
    }
    .card:hover .act-btn.del{opacity:1}
    .act-btn.del:hover{background:rgba(248,113,113,0.1);color:#F87171;border-color:rgba(248,113,113,0.3)}
-
+   
    .card-nome{
      font-size:17px;font-weight:700;line-height:1.25;
      color:var(--white);letter-spacing:-0.01em;
@@ -302,27 +316,17 @@
      font-size:12px;color:var(--gray);line-height:1.6;font-weight:300;
      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
    }
-   .card-yt-tag{
-     align-self:flex-start;
-     display:inline-flex;align-items:center;gap:5px;
-     font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
-     color:#FF6B6B;
-     background:rgba(255,0,0,0.08);
-     border:1px solid rgba(255,80,80,0.3);
-     padding:3px 9px;border-radius:2px;
+   
+   /* YouTube / Spotify / Cifra: na grade são só sinal de "existe".
+      Monocromáticos, para não brigar com o amarelo do tom. */
+   .card-tags{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+   .card-ico{
+     display:inline-flex;align-items:center;justify-content:center;
+     color:#5F5F5F;transition:color 0.2s;
    }
-   .card-tags{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-   .card-sp-tag{
-     color:#1DB954;
-     background:rgba(29,185,84,0.08);
-     border-color:rgba(29,185,84,0.35);
-   }
-   .card-cf-tag{
-     color:#F59E0B;
-     background:rgba(245,158,11,0.08);
-     border-color:rgba(245,158,11,0.35);
-   }
-
+   .card:hover .card-ico{color:#8C8C8C}
+   
+   /* ——— Linha de tom ——— */
    .card-tons{display:flex;flex-direction:column;gap:6px}
    .card-ton-row{
      display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -336,16 +340,9 @@
      padding:3px 10px;border-radius:4px;
      flex-shrink:0;min-width:48px;text-align:center;
    }
-   .card-min-label{
-     font-size:12px;font-weight:700;
-     padding:4px 10px;
-     letter-spacing:0.02em;
-     border:1px solid transparent;border-radius:4px;
-   }
-
-   /* lado direito da linha de tom: ministrante + selo de mais usado */
    .ton-row-right{
      display:flex;align-items:center;gap:6px;
+     flex-wrap:wrap;justify-content:flex-end;
      margin-left:auto;min-width:0;
    }
    /* selo do tom mais cantado nos cultos */
@@ -359,34 +356,51 @@
      white-space:nowrap;
    }
    .view-tons .tom-top{font-size:11px;padding:4px 9px}
-
-   .chip-Raphaela{background:rgba(255,224,0,0.1);color:#FFE000;}
-   .chip-Daniela {background:rgba(96,165,250,0.1);color:#60A5FA;}
-   .chip-Cris    {background:rgba(74,222,128,0.1);color:#4ADE80;}
-   .chip-Mirian  {background:rgba(251,146,60,0.1);color:#FB923C;}
-   .chip-Humberto{background:rgba(167,139,250,0.1);color:#A78BFA;}
-
-   /* tom único → vale para todos os ministrantes */
-   .chip-todos{
-     background:rgba(52,211,153,0.1);
-     border-color:rgba(52,211,153,0.35);
-     color:#34D399;
-     text-transform:uppercase;
-     font-size:11px;letter-spacing:0.08em;
+   
+   /* ——— Chips de ministrante ———
+      Todos iguais: mesma largura, texto centralizado e em maiúsculas,
+      como o "TODOS". Sem cor e sem ponto: quem manda na cor é o tom. */
+   .card-min-label{
+     display:inline-flex;align-items:center;justify-content:center;
+     width:var(--chip-w);          /* largura única: as linhas alinham */
+     padding:4px 10px;
+     font-size:10px;font-weight:700;
+     letter-spacing:0.1em;text-transform:uppercase;
+     background:rgba(255,255,255,0.05);
+     border:1px solid rgba(255,255,255,0.09);
+     color:#C4C4C4;
+     border-radius:4px;
+     white-space:nowrap;overflow:hidden;
    }
-
+   
+   /* "Todos" é informação, não pessoa: um tom de cinza abaixo */
+   .chip-todos{
+     background:rgba(255,255,255,0.04);
+     border-color:rgba(255,255,255,0.10);
+     color:#9A9A9A;
+   }
+   
+   /* cor de cada ministrante — sem uso enquanto os chips são neutros.
+      Ficam aqui caso um dia você queira marcar a pessoa de novo. */
+   .chip-Raphaela{--min:#F2789F}   /* rosa     */
+   .chip-Daniela {--min:#6BA8F5}   /* azul     */
+   .chip-Cris    {--min:#4FD1C5}   /* turquesa */
+   .chip-Mirian  {--min:#C084FC}   /* violeta  */
+   .chip-Humberto{--min:#F97B5B}   /* coral    */
+   
    .card-foot{
      display:flex;align-items:center;justify-content:space-between;gap:10px;
      padding-top:10px;border-top:1px solid var(--black4);margin-top:auto;
    }
    .card-foot .card-tags{flex:1;min-width:0}
-   .card-foot .card-yt-tag{
-     align-self:auto;
-     font-size:9px;padding:2px 7px;gap:3px;
+   .card-date{
+     font-size:10px;color:var(--gray2);font-weight:400;
+     letter-spacing:0.04em;flex-shrink:0;white-space:nowrap;
    }
-   .card-date{font-size:10px;color:var(--gray2);font-weight:400;letter-spacing:0.04em;flex-shrink:0;white-space:nowrap}
-
-   /* ——— STATES ——— */
+   
+   /* ============================================================
+      ESTADOS (carregando / vazio)
+      ============================================================ */
    .state-loading,.state-empty{
      grid-column:1/-1;
      display:none;flex-direction:column;align-items:center;
@@ -409,8 +423,10 @@
    }
    .empty-ttl{font-size:18px;font-weight:700;color:var(--black5)}
    .empty-sub{font-size:13px;color:var(--gray2)}
-
-   /* ——— MODAL MÚSICA ——— */
+   
+   /* ============================================================
+      MODAIS
+      ============================================================ */
    .overlay-bg{
      position:fixed;inset:0;
      background:rgba(0,0,0,0.82);
@@ -423,7 +439,7 @@
      border:1px solid var(--black5);
      width:100%;max-width:500px;
      border-radius:10px;overflow:hidden;
-     max-height:90vh;display:flex;flex-direction:column;
+     max-height:90dvh;display:flex;flex-direction:column;
    }
    .modal-hd{
      padding:24px 24px 20px;
@@ -451,6 +467,7 @@
      display:flex;gap:8px;justify-content:flex-end;
      border-top:1px solid var(--black4);flex-shrink:0;
    }
+   
    .flabel{
      font-size:10px;font-weight:700;color:var(--gray2);
      letter-spacing:0.12em;text-transform:uppercase;
@@ -468,8 +485,8 @@
    .finput::placeholder{color:var(--gray2)}
    .finput option{background:var(--black2);color:var(--white)}
    .ftextarea{resize:vertical;min-height:72px}
-
-   /* ——— TOM ADD ROW ——— */
+   
+   /* ——— Tom + ministrante ——— */
    .tom-add-row{
      display:grid;grid-template-columns:1fr 1fr auto;
      gap:8px;align-items:center;
@@ -483,8 +500,7 @@
      transition:background 0.15s;flex-shrink:0;
    }
    .btn-add-tom:hover{background:var(--yellow2)}
-
-   /* ——— TOM LIST (pares adicionados) ——— */
+   
    .tom-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
    .tom-list-item{
      display:flex;align-items:center;justify-content:space-between;
@@ -498,10 +514,8 @@
      font-size:20px;letter-spacing:0.04em;
      color:var(--yellow);min-width:40px;text-align:center;
    }
-   .tom-list-min{
-     font-size:11px;font-weight:600;
-     letter-spacing:0.06em;color:var(--gray);text-transform:uppercase;
-   }
+   /* aqui o chip tem o "✕" dentro: largura livre */
+   .tom-list-min.card-min-label{width:auto}
    .tom-list-remove{
      width:24px;height:24px;
      background:transparent;border:1px solid var(--black5);
@@ -513,30 +527,28 @@
      background:rgba(248,113,113,0.1);
      color:#F87171;border-color:rgba(248,113,113,0.3);
    }
-   /* aviso do tom único no modal de edição */
    .tom-list-hint{
-     font-size:11px;line-height:1.5;color:#34D399;
-     background:rgba(52,211,153,0.06);
-     border:1px solid rgba(52,211,153,0.25);
+     font-size:11px;line-height:1.5;color:var(--gray);
+     background:rgba(255,255,255,0.03);
+     border:1px solid rgba(255,255,255,0.10);
      border-radius:var(--r);
      padding:8px 12px;
    }
-   /* ——— CIFRAS (input + lista) ——— */
+   
+   /* ——— Cifras (lista dinâmica) ——— */
    .cifra-add-row{
      display:grid;grid-template-columns:1fr auto;
      gap:8px;align-items:center;
    }
    .cifra-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
    .cifra-list-info{min-width:0;flex:1}
-   .cifra-list-icon{
-     color:#F59E0B;font-size:16px;flex-shrink:0;
-   }
+   .cifra-list-icon{color:#F59E0B;font-size:16px;flex-shrink:0}
    .cifra-list-url{
      font-size:12px;color:var(--gray);
      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
    }
-
-   /* ——— BOTÕES MODAL ——— */
+   
+   /* ——— Botões do modal ——— */
    .btn-cancel{
      padding:10px 18px;
      background:transparent;border:1px solid var(--black5);
@@ -555,8 +567,10 @@
    }
    .btn-save:hover{background:var(--yellow2)}
    .btn-save:disabled{opacity:0.4;cursor:not-allowed}
-
-   /* ——— TOAST ——— */
+   
+   /* ============================================================
+      TOAST
+      ============================================================ */
    .toast{
      position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
      background:var(--black3);border:1px solid var(--black5);
@@ -569,12 +583,10 @@
    }
    .toast.show{opacity:1}
    .toast.err{border-color:rgba(248,113,113,0.4);color:#F87171}
-
+   
    /* ============================================================
-      LOGIN / AUTH
+      LOGIN
       ============================================================ */
-
-   /* Overlay do modal de login */
    #loginOverlay{
      display:none;
      position:fixed;inset:0;
@@ -585,8 +597,6 @@
      padding:24px;
    }
    #loginOverlay.open{display:flex}
-
-   /* Caixa central */
    .login-box{
      background:var(--black2);
      border:1px solid var(--black5);
@@ -601,16 +611,14 @@
      font-size:28px;letter-spacing:0.06em;
      color:var(--white);margin:0 0 2px;
    }
-   .login-box p.login-sub{
-     font-size:12px;color:var(--gray2);margin:0;
-   }
+   .login-box p.login-sub{font-size:12px;color:var(--gray2);margin:0}
    .login-box label{
      font-size:10px;font-weight:700;
      letter-spacing:0.12em;text-transform:uppercase;
      color:var(--gray2);display:block;margin-bottom:7px;
    }
    .login-box input{
-     width:100%;box-sizing:border-box;
+     width:100%;
      background:var(--black3);
      border:1px solid var(--black5);
      color:var(--white);
@@ -621,15 +629,8 @@
    }
    .login-box input:focus{border-color:var(--yellow)}
    .login-box input::placeholder{color:var(--gray2)}
-
-   .login-error{
-     font-size:12px;font-weight:600;
-     color:#F87171;min-height:16px;
-   }
-
-   .login-actions{
-     display:flex;gap:8px;margin-top:4px;
-   }
+   .login-error{font-size:12px;font-weight:600;color:#F87171;min-height:16px}
+   .login-actions{display:flex;gap:8px;margin-top:4px}
    .btn-login-cancel{
      flex:1;padding:10px 18px;
      background:transparent;border:1px solid var(--black5);
@@ -648,27 +649,9 @@
      transition:background 0.15s;
    }
    .btn-login-submit:hover{background:var(--yellow2)}
-
-   /* Botão Sair no header */
-   .btn-logout{
-     padding:9px 16px;
-     border:1px solid var(--black5);
-     border-radius:var(--r);
-     background:transparent;
-     font-family:'Inter',sans-serif;
-     font-size:12px;font-weight:700;
-     letter-spacing:0.05em;text-transform:uppercase;
-     cursor:pointer;color:var(--gray);
-     transition:all 0.15s;
-   }
-   .btn-logout:hover{
-     background:var(--black3);
-     color:var(--white);
-     border-color:var(--gray3);
-   }
-
+   
    /* ============================================================
-      MODAL LEITURA (visualizar)
+      MODAL DE LEITURA (ver música)
       ============================================================ */
    .view-modal{max-width:540px}
    .view-modal .modal-hd h2{
@@ -688,24 +671,17 @@
      color:var(--yellow);border-color:rgba(255,224,0,0.3);
    }
    body.read-only .view-edit-btn{display:none}
-
+   
    .view-bd{gap:24px;padding:24px}
-
-   /* Tons mais destacados */
+   
    .view-tons{display:flex;flex-direction:column;gap:8px}
    .view-tons .card-ton-row{
      background:var(--black3);border:1px solid var(--black5);
      border-radius:var(--r);padding:12px 16px;
    }
-   .view-tons .card-badge{
-     font-size:28px;padding:4px 14px;min-width:60px;
-   }
-   .view-tons .card-min-label{font-size:12px;padding:4px 12px}
-
-   /* Seção de observações em caixa destacada */
-   .view-section .flabel{
-     margin-bottom:10px;font-size:11px;color:var(--yellow);
-   }
+   .view-tons .card-badge{font-size:28px;padding:4px 14px;min-width:60px}
+   
+   .view-section .flabel{margin-bottom:10px;font-size:11px;color:var(--yellow)}
    .view-obs{
      font-size:17px;line-height:1.75;color:var(--white);font-weight:400;
      white-space:pre-wrap;word-break:break-word;
@@ -719,7 +695,8 @@
      color:var(--gray2);font-style:italic;font-size:14px;
      border-left-color:var(--black5);
    }
-
+   
+   /* botões de link: aqui a cor da marca vale, são poucos e ajudam */
    .view-links{display:flex;flex-direction:column;gap:8px}
    .view-yt-btn{
      display:flex;align-items:center;gap:10px;
@@ -731,42 +708,36 @@
      letter-spacing:0.03em;text-transform:uppercase;
      text-decoration:none;transition:all 0.15s;
    }
-   .view-yt-btn:hover{
-     background:rgba(255,0,0,0.14);border-color:rgba(255,80,80,0.5);
-   }
+   .view-yt-btn:hover{background:rgba(255,0,0,0.14);border-color:rgba(255,80,80,0.5)}
    .view-yt-btn svg{flex-shrink:0}
    .view-sp-btn{
      background:rgba(29,185,84,0.08);
      border-color:rgba(29,185,84,0.35);
      color:#1DB954;
    }
-   .view-sp-btn:hover{
-     background:rgba(29,185,84,0.16);border-color:rgba(29,185,84,0.55);
-   }
+   .view-sp-btn:hover{background:rgba(29,185,84,0.16);border-color:rgba(29,185,84,0.55)}
    .view-cf-btn{
      background:rgba(245,158,11,0.08);
      border-color:rgba(245,158,11,0.35);
      color:#F59E0B;
      justify-content:center;
    }
-   .view-cf-btn:hover{
-     background:rgba(245,158,11,0.16);border-color:rgba(245,158,11,0.55);
-   }
-   /* YouTube + Spotify lado a lado */
+   .view-cf-btn:hover{background:rgba(245,158,11,0.16);border-color:rgba(245,158,11,0.55)}
    .view-links-row{display:flex;gap:8px}
    .view-links-row .view-mini{flex:1;min-width:0}
-   .view-mini{
-     justify-content:center;
-     padding:13px 12px;
-     font-size:13px;
+   .view-mini{justify-content:center;padding:13px 12px;font-size:13px}
+   
+   /* botões de cifra e letra do Lyra */
+   .view-lyra{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+   .view-lyra .view-yt-btn{
+     width:100%;
+     display:flex;align-items:center;justify-content:center;gap:9px;
    }
-
+   
    /* ============================================================
       CULTOS
       ============================================================ */
-   .cultos-wrap{
-     max-width:1280px;margin:36px auto 0;padding:0 36px;
-   }
+   .cultos-wrap{max-width:1280px;margin:36px auto 0;padding:0 36px}
    .cultos-head{margin-bottom:18px}
    .cultos-title{
      font-family:'Bebas Neue',sans-serif;
@@ -774,14 +745,10 @@
      letter-spacing:0.04em;line-height:1;color:var(--white);
    }
    .cultos-title em{color:var(--yellow);font-style:normal}
-   .cultos-sub{
-     font-size:13px;font-weight:300;color:var(--gray);margin-top:8px;
-   }
-   .cultos-grid{
-     display:grid;
-     grid-template-columns:repeat(3,1fr);
-     gap:12px;
-   }
+   .cultos-sub{font-size:13px;font-weight:300;color:var(--gray);margin-top:8px}
+   .cultos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+   .cultos-grid.solo{grid-template-columns:1fr}
+   
    .culto-col{
      background:var(--black2);
      border:1px solid var(--black4);
@@ -795,13 +762,10 @@
      display:flex;align-items:center;justify-content:space-between;gap:12px;
    }
    .culto-col-hd-left{min-width:0}
-   .culto-col-titulo-row{
-     display:flex;align-items:center;gap:11px;flex-wrap:wrap;
-   }
+   .culto-col-titulo-row{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
    .culto-col-titulo{
      font-family:'Bebas Neue',sans-serif;
-     font-size:24px;letter-spacing:0.04em;color:var(--white);
-     line-height:1;
+     font-size:24px;letter-spacing:0.04em;color:var(--white);line-height:1;
    }
    .culto-col-data{
      font-family:'Inter',sans-serif;
@@ -811,7 +775,7 @@
      background:rgba(255,224,0,0.08);
      border:1px solid rgba(255,224,0,0.25);
      padding:5px 10px;border-radius:5px;
-     position:relative;top:-2px; /* compensa o offset da Bebas Neue do título */
+     position:relative;top:-2px;   /* compensa o offset da Bebas Neue */
    }
    .culto-col-dia{
      font-size:10px;font-weight:700;color:var(--yellow);
@@ -824,9 +788,8 @@
      border:1px solid var(--black5);
      padding:6px 12px;border-radius:4px;
    }
-   .culto-col-bd{
-     padding:14px;display:flex;flex-direction:column;gap:8px;flex:1;
-   }
+   .culto-col-bd{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
+   
    .culto-louvor{
      background:var(--black3);
      border:1px solid var(--black5);
@@ -849,11 +812,6 @@
    .culto-louvor-nome{
      font-size:13px;font-weight:600;color:var(--white);line-height:1.2;
      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-   }
-   .culto-louvor-min{
-     font-size:9px;font-weight:700;letter-spacing:0.06em;
-     text-transform:uppercase;margin-top:3px;display:inline-block;
-     padding:2px 8px;border:1px solid;border-radius:2px;
    }
    .culto-louvor-rm{
      width:24px;height:24px;flex-shrink:0;
@@ -882,8 +840,8 @@
    }
    body.read-only .culto-add-btn,
    body.read-only .culto-louvor-rm{display:none}
-
-   /* Seções extras (Ofertório, Pós-palavra) no rodapé de cada bloco de culto */
+   
+   /* seções extras: hierarquia por posição e tamanho, não por cor */
    .culto-secao{
      margin:0 12px 12px;
      padding-top:13px;
@@ -891,19 +849,13 @@
      display:flex;flex-direction:column;gap:8px;
    }
    .culto-secao-label{
-     font-size:10px;font-weight:700;color:var(--yellow);
-     letter-spacing:0.12em;text-transform:uppercase;
-   }
-   .culto-secao-pos .culto-secao-label{color:#A78BFA}
-   .culto-secao-pos .culto-add-btn:hover{
-     border-color:#A78BFA;color:#A78BFA;
-     background:rgba(167,139,250,0.05);
+     font-size:9px;font-weight:700;color:var(--gray2);
+     letter-spacing:0.16em;text-transform:uppercase;
    }
    .culto-secao-bd{display:flex;flex-direction:column;gap:8px}
-   /* o botão de adicionar vive dentro da seção (que já tem margem) */
    .culto-add-secao{margin:0}
-
-   /* Rodapé: "atualizado há X" + botão Copiar (visível para todos) */
+   
+   /* rodapé: "atualizado há X" + copiar */
    .culto-col-meta{
      display:flex;align-items:center;justify-content:space-between;gap:10px;
      margin:0 12px 12px;padding-top:12px;
@@ -926,8 +878,8 @@
      background:rgba(255,224,0,0.04);
    }
    .culto-copy-btn svg{width:13px;height:13px}
-
-   /* Ministrante escalado do culto (topo do bloco) */
+   
+   /* ministrante escalado do culto */
    .culto-escala{
      display:flex;align-items:center;gap:10px;
      padding:11px 18px;
@@ -948,15 +900,20 @@
    .culto-escala-sel:hover{border-color:var(--gray2)}
    .culto-escala-sel:focus{outline:none;border-color:var(--yellow)}
    .culto-escala-nome{
-     font-size:12px;font-weight:700;letter-spacing:0.02em;
-     padding:4px 10px;border:1px solid transparent;border-radius:4px;
+     display:inline-flex;align-items:center;justify-content:center;
+     font-size:10px;font-weight:700;
+     letter-spacing:0.1em;text-transform:uppercase;
+     padding:5px 12px;border-radius:4px;
+     background:rgba(255,255,255,0.05);
+     border:1px solid rgba(255,255,255,0.09);
+     color:#D6D6D6;
    }
-   .culto-escala-vazio{color:var(--gray2);font-weight:600}
+   .culto-escala-vazio{color:var(--gray2)}
    /* admin vê o seletor; quem só visualiza vê o nome */
    body.read-only .culto-escala-sel{display:none}
    body:not(.read-only) .culto-escala-nome{display:none}
-
-   /* Abas do modal de culto */
+   
+   /* abas do modal de culto */
    .culto-tabs{display:flex;gap:6px;margin-bottom:4px}
    .culto-tab{
      flex:1;padding:9px;background:var(--black3);
@@ -965,9 +922,7 @@
      letter-spacing:0.04em;text-transform:uppercase;
      border-radius:var(--r);cursor:pointer;transition:all 0.15s;
    }
-   .culto-tab.active{
-     background:var(--yellow);color:var(--black);border-color:var(--yellow);
-   }
+   .culto-tab.active{background:var(--yellow);color:var(--black);border-color:var(--yellow)}
    .culto-musica-list{
      margin-top:10px;display:flex;flex-direction:column;gap:5px;
      max-height:280px;overflow-y:auto;padding-right:2px;
@@ -982,17 +937,10 @@
    }
    .culto-musica-opt:hover{border-color:var(--gray3);background:var(--black4)}
    .culto-musica-opt.sel{border-color:var(--yellow);background:rgba(255,224,0,0.06)}
-   .culto-hint{
-     font-size:11px;color:var(--gray2);margin-top:8px;font-style:italic;
-   }
-
-   /* ============================================================
-      SELETOR DE CULTO
-      ============================================================ */
-   .culto-seletor{
-     display:flex;align-items:center;gap:10px;
-     margin-bottom:14px;
-   }
+   .culto-hint{font-size:11px;color:var(--gray2);margin-top:8px;font-style:italic}
+   
+   /* seletor de culto */
+   .culto-seletor{display:flex;align-items:center;gap:10px;margin-bottom:14px}
    .culto-seletor-data{
      flex-shrink:0;
      font-family:'Inter',sans-serif;
@@ -1004,46 +952,33 @@
      padding:12px 14px;border-radius:var(--r);
      min-width:64px;
    }
-   .culto-seletor-sel{
-     flex:1;min-width:0;color:var(--white);font-weight:600;
-   }
-   /* com um culto só na tela, ele ocupa a largura inteira */
-   .cultos-grid.solo{grid-template-columns:1fr}
-
+   .culto-seletor-sel{flex:1;min-width:0;color:var(--white);font-weight:600}
+   
    /* ============================================================
       LEITOR DE CIFRAS E LETRAS
+      Tela cheia em qualquer aparelho: no palco o que importa é
+      caber o máximo de cifra, sem caixa flutuante nem moldura.
       ============================================================ */
-
-   /* Botões no modal de leitura */
-   .view-lyra{
-     display:flex;flex-direction:column;gap:8px;margin-top:12px;
-   }
-   .view-lyra .view-yt-btn{
-     width:100%;box-sizing:border-box;
-     display:flex;align-items:center;justify-content:center;gap:9px;
-   }
-
-   /* Overlay */
    #lyraOverlay{
      position:fixed;inset:0;z-index:9000;
      display:none;align-items:center;justify-content:center;
-     padding:16px;
-     background:rgba(0,0,0,0.82);
-     backdrop-filter:blur(3px);
+     padding:0;background:#0d0d0d;
    }
    #lyraOverlay.open{display:flex}
-   /* com o leitor aberto, a página atrás não rola */
-   body.lyra-travado{overflow:hidden}
-
+   #lyraOverlay:has(.lyra-box.claro){background:#FAF9F7}
+   body.lyra-travado{overflow:hidden}   /* a página atrás não rola */
+   
    .lyra-box{
-     width:100%;max-width:760px;max-height:92vh;
+     width:100%;max-width:none;
+     height:100dvh;max-height:100dvh;
      display:flex;flex-direction:column;overflow:hidden;
      background:#0d0d0d;
-     border:1px solid rgba(255,255,255,0.10);
-     border-radius:14px;
+     border:none;border-radius:0;
+     padding-top:env(safe-area-inset-top);
+     padding-bottom:env(safe-area-inset-bottom);
    }
-
-   /* Cabeçalho */
+   
+   /* cabeçalho */
    .lyra-hd{
      display:flex;align-items:center;justify-content:space-between;gap:12px;
      padding:14px 16px 12px;
@@ -1065,8 +1000,8 @@
      padding:4px 6px;margin-left:2px;
    }
    .lyra-x:hover{color:#e6e6e6}
-
-   /* Barra de controles — cada grupo quebra inteiro,
+   
+   /* barra de controles: cada grupo quebra inteiro,
       nunca solta um botão sozinho na linha */
    .lyra-barra{
      display:flex;flex-wrap:wrap;align-items:center;
@@ -1081,7 +1016,7 @@
    .lyra-grupo > .lyra-seg{flex:1;min-width:0}
    .lyra-grupo > .lyra-btn{flex:0 0 auto;min-width:46px}
    .lyra-lbl{font-size:13px;font-weight:600;color:var(--gray);flex:0 0 auto}
-
+   
    .lyra-seg{
      display:inline-flex;align-items:center;overflow:hidden;
      background:var(--black5);
@@ -1096,8 +1031,8 @@
      transition:background 0.15s,color 0.15s;
    }
    .lyra-seg button:hover{background:rgba(255,255,255,0.09);color:var(--white)}
-   .lyra-seg button.on{background:var(--cifra);color:#1a1a1a}
-   .lyra-seg button.on:hover{background:var(--cifra)}
+   .lyra-seg button.on,
+   .lyra-seg button.on:hover{background:var(--cifra);color:#1a1a1a}
    .lyra-seg .lyra-pct{
      padding:0 6px;flex:0 0 auto;
      border-left:1px solid var(--gray3);
@@ -1107,8 +1042,8 @@
      font-size:12px;font-weight:700;color:#c8c8c8;
      min-width:56px;text-align:center;line-height:40px;user-select:none;
    }
-
-   /* Seletor de tom */
+   
+   /* seletor de tom */
    .lyra-grupo-tom{display:inline-flex;align-items:center;gap:8px;flex:1;min-width:0}
    .lyra-tom{position:relative;display:inline-flex;align-items:center;flex:1;min-width:0}
    .lyra-tom select{
@@ -1120,7 +1055,7 @@
    }
    .lyra-tom select:focus-visible{outline:2px solid var(--white);outline-offset:2px}
    .lyra-tom svg{position:absolute;right:12px;pointer-events:none;color:#1a1a1a}
-
+   
    .lyra-btn{
      display:inline-flex;align-items:center;justify-content:center;
      background:var(--black5);
@@ -1131,11 +1066,14 @@
      transition:background 0.15s,color 0.15s,border-color 0.15s;
    }
    .lyra-btn:hover{background:#3A3A3A;border-color:var(--gray2)}
-   .lyra-btn.on{background:var(--cifra);border-color:var(--cifra);color:#1a1a1a}
-   .lyra-btn.on:hover{background:var(--cifra)}
+   .lyra-btn.on,
+   .lyra-btn.on:hover{background:var(--cifra);border-color:var(--cifra);color:#1a1a1a}
    .lyra-btn:focus-visible{outline:2px solid var(--cifra);outline-offset:2px}
-
-   /* Corpo: cifra e letra */
+   /* seta que não leva a lugar nenhum (ponta da lista) */
+   .lyra-btn:disabled{opacity:0.3;cursor:default}
+   .lyra-btn:disabled:hover{background:var(--black5);border-color:var(--gray3)}
+   
+   /* corpo: cifra e letra */
    .lyra-corpo{overflow:auto;overscroll-behavior:contain;padding:18px 16px 28px;flex:1}
    .lyra-pre{
      margin:0;white-space:pre;line-height:1.55;
@@ -1152,9 +1090,9 @@
      padding:34px 18px;text-align:center;
      color:var(--gray);font-size:13px;font-weight:600;
    }
-
-   /* Modo claro */
-   .lyra-box.claro{background:#FAF9F7;border-color:rgba(0,0,0,0.14)}
+   
+   /* modo claro */
+   .lyra-box.claro{background:#FAF9F7}
    .claro .lyra-hd h3{color:#141414}
    .claro .lyra-hd p{color:#6b6b6b}
    .claro .lyra-x{color:#767676}
@@ -1168,6 +1106,7 @@
    .claro .lyra-btn.on:hover{
      background:var(--cifra-claro);border-color:var(--cifra-claro);color:var(--white);
    }
+   .claro .lyra-btn:disabled:hover{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
    .claro .lyra-seg{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
    .claro .lyra-seg .lyra-pct{border-color:rgba(0,0,0,0.14)}
    .claro .lyra-seg button{color:#5f5f5f}
@@ -1180,28 +1119,44 @@
    .claro .lyra-secao{color:var(--cifra-claro)}
    .claro .lyra-letra{color:#242424}
    .claro .lyra-msg{color:#6b6b6b}
-
-   /* Celular: leitor ocupa a tela inteira */
-   @media(max-width:600px){
-     #lyraOverlay{padding:0}
-     .lyra-box{
-       max-width:none;max-height:100vh;height:100vh;
+   
+   /* em monitor largo o fundo vai de ponta a ponta, mas o conteúdo
+      para de esticar: seletor de tom com 600px não ajuda ninguém */
+   @media (min-width:1180px){
+     .lyra-hd,.lyra-barra,.lyra-corpo{
+       width:100%;max-width:1180px;
+       margin-left:auto;margin-right:auto;
+     }
+   }
+   
+   /* ============================================================
+      RESPONSIVO
+      ============================================================ */
+   
+   /* iPad e tablets: o modal da música também preenche a tela */
+   @media (min-width:601px) and (max-width:1180px) and (pointer:coarse){
+     .overlay-bg{padding:0;align-items:stretch;justify-content:stretch}
+     .overlay-bg .modal{
+       width:100%;max-width:none;
+       height:100dvh;max-height:100dvh;
        border:none;border-radius:0;
      }
-     .lyra-barra{gap:9px;padding:11px 14px}
-     .lyra-grupo{gap:7px}
-     .lyra-seg button{padding:0 14px}
+     .modal-hd{padding-top:calc(24px + env(safe-area-inset-top))}
+     .modal-ft{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+     .modal-hd,.modal-bd,.modal-ft{
+       width:100%;max-width:620px;
+       margin-left:auto;margin-right:auto;
+     }
+     .modal-bd{flex:1}
    }
-
-   /* ——— RESPONSIVE ——— */
+   
    @media(max-width:768px){
-     /* abaixo de 768px: busca em cima (fixa sozinha), filtros embaixo meio a meio */
-     /* toolbar deixa de ser caixa: search-row e filtros viram filhas diretas da section,
-        assim a busca sticky gruda durante TODA a seção, não só na altura da toolbar */
+     /* a toolbar deixa de ser caixa: busca e filtros viram filhas
+        diretas da seção, então a busca gruda durante a seção toda */
      .toolbar{display:contents}
      .repertorio{padding:0 36px}
      .search-row{
-       position:sticky;top:64px;z-index:90;
+       position:sticky;top:calc(64px + env(safe-area-inset-top));z-index:90;
        padding:8px 0 10px;margin-top:28px;
        background:var(--black);
        transition:box-shadow 0.2s,border-color 0.2s;
@@ -1210,33 +1165,22 @@
        border-bottom:1px solid var(--black4);
        box-shadow:0 6px 20px rgba(0,0,0,0.4);
      }
-     .filtros-row{
-       display:flex;gap:10px;align-items:center;
-       padding-bottom:4px;margin-top:0;
-     }
-     /* os dois filtros ocupam metade cada, iguais */
-     .filtros-row .sel{flex:1 1 0;min-width:0;width:auto;}
-     .grid{padding: 0;}
+     .filtros-row{padding-bottom:4px;margin-top:0}
+     .filtros-row .sel{flex:1 1 0;min-width:0;width:auto}
+     .grid{padding:0}
    }
+   
    @media(max-width:700px){
      .header-inner,.hero{padding-left:20px;padding-right:20px}
      .toolbar{padding-left:20px;padding-right:20px}
      .hero{grid-template-columns:1fr;gap:24px}
      .hero-right-col{align-self:auto;width:100%}
-     /* Stats: linha horizontal ocupando 100% da largura */
-     .hero-stats{
-       flex-direction:row;
-       width:100%;
-       min-width:unset;
-     }
+     /* stats viram uma linha só, ocupando a largura toda */
+     .hero-stats{flex-direction:row;width:100%;min-width:unset}
      .stat-row{
-       flex:1;
-       flex-direction:column;
-       align-items:center;
-       justify-content:center;
-       gap:4px;
-       border-bottom:none;
-       border-right:1px solid var(--black4);
+       flex:1;flex-direction:column;
+       align-items:center;justify-content:center;gap:4px;
+       border-bottom:none;border-right:1px solid var(--black4);
        padding:14px 8px;
      }
      .stat-row:last-child{border-right:none}
@@ -1244,20 +1188,21 @@
      .stat-l{font-size:9px;letter-spacing:0.06em;text-align:center}
      .act-btn.del{opacity:1}
      .grid{grid-template-columns:1fr}
-     .tom-add-row{grid-template-columns:1fr 1fr auto}
-     .cultos-wrap{padding-left:20px;padding-right:20px}
+     .cultos-wrap,.repertorio{padding-left:20px;padding-right:20px}
      .cultos-grid{grid-template-columns:1fr}
-     .repertorio{padding-left:20px;padding-right:20px}
-
-     /* iOS dá zoom em campos < 16px ao focar — forçar 16px evita isso */
-     .inp-search,.sel,.finput,.login-box input{
-       font-size:16px;
-     }
+     /* iOS dá zoom em campos abaixo de 16px ao focar */
+     .inp-search,.sel,.finput,.login-box input{font-size:16px}
    }
+   
+   @media(max-width:600px){
+     .lyra-barra{gap:9px;padding:11px 14px}
+     .lyra-grupo{gap:7px}
+     .lyra-seg button{padding:0 14px}
+   }
+   
    @media(max-width:480px){
-     /* header fica menor (56px): busca gruda logo abaixo dele */
-     .search-row{top:56px}
      .header-inner{padding:0 16px;height:56px}
+     .search-row{top:calc(56px + env(safe-area-inset-top))}
      .logo-img{height:26px}
      .logo-sep{height:22px}
      .logo-sub{font-size:9px;letter-spacing:0.1em}
@@ -1266,351 +1211,3 @@
      #statusTxt{display:none}
      .login-box{padding:28px 20px 22px}
    }
-
-   /* ——— Limpar a busca ——— */
-   .search-wrap .inp-search{padding-right:38px}
-   .search-clear{
-     position:absolute;right:9px;top:50%;transform:translateY(-50%);
-     width:24px;height:24px;
-     display:none;align-items:center;justify-content:center;
-     background:transparent;border:none;cursor:pointer;
-     color:var(--gray2);font-size:12px;line-height:1;
-     border-radius:4px;transition:color 0.15s,background 0.15s;
-   }
-   .search-clear.on{display:flex}
-   .search-clear:hover{color:var(--white);background:var(--black4)}
-
-   /* ============================================================
-      ÁREA SEGURA — iPhone com notch e app instalado
-      ============================================================ */
-
-   /* o header encosta no topo da tela quando roda como app:
-      o respiro entra como padding, então o fundo continua opaco
-      por baixo do relógio e da bateria */
-   .header{padding-top:env(safe-area-inset-top)}
-
-   @media(max-width:768px){
-     .search-row{top:calc(64px + env(safe-area-inset-top))}
-   }
-   @media(max-width:480px){
-     .search-row{top:calc(56px + env(safe-area-inset-top))}
-   }
-
-   /* leitor de cifra em tela cheia */
-   @media(max-width:600px){
-     .lyra-box{
-       height:100dvh;max-height:100dvh;
-       padding-top:env(safe-area-inset-top);
-       padding-bottom:env(safe-area-inset-bottom);
-     }
-   }
-
-   /* seta sem destino e espera da busca de cifra */
-.lyra-btn:disabled{opacity:0.3;cursor:default}
-.lyra-btn:disabled:hover{background:var(--black5);border-color:var(--gray3)}
-.claro .lyra-btn:disabled:hover{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
-.lyra-espera{
-  justify-content:center;
-  opacity:0.5;pointer-events:none;
-  font-size:13px;letter-spacing:0.02em;
-}
-
-
-/* ============================================================
-   COLE ISTO NO FIM DO style.css
-   ============================================================ */
-
-/* ——— Setas do leitor sem destino ——— */
-.lyra-btn:disabled{opacity:0.3;cursor:default}
-.lyra-btn:disabled:hover{background:var(--black5);border-color:var(--gray3)}
-.claro .lyra-btn:disabled:hover{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
-
-/* ——— iOS: 90vh conta a barra do Safari e corta o rodapé do modal ——— */
-.modal{max-height:90dvh}
-.lyra-box{max-height:92dvh}
-
-/* ============================================================
-   iPad e tablets — os modais preenchem a tela
-   (min-width 601px evita mexer no celular, pointer:coarse evita
-    mexer no desktop com a janela estreita)
-   ============================================================ */
-@media (min-width:601px) and (max-width:1180px) and (pointer:coarse){
-
-  .overlay-bg{
-    padding:0;
-    align-items:stretch;
-    justify-content:stretch;
-  }
-  .overlay-bg .modal{
-    width:100%;max-width:none;
-    height:100dvh;max-height:100dvh;
-    border:none;border-radius:0;
-  }
-  .modal-hd{padding-top:calc(24px + env(safe-area-inset-top))}
-  .modal-ft{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
-
-  /* o conteúdo passa a ocupar a altura toda, em coluna centralizada
-     para a linha de texto não ficar larga demais */
-  .modal-bd{
-    flex:1;
-    width:100%;max-width:620px;
-    margin:0 auto;
-  }
-  .modal-hd,
-  .modal-ft{
-    width:100%;max-width:620px;
-    margin-left:auto;margin-right:auto;
-  }
-
-  /* leitor de cifra também em tela cheia no iPad */
-  #lyraOverlay{padding:0}
-  .lyra-box{
-    width:100%;max-width:none;
-    height:100dvh;max-height:100dvh;
-    border:none;border-radius:0;
-    padding-top:env(safe-area-inset-top);
-    padding-bottom:env(safe-area-inset-bottom);
-  }
-}
-
-/* ============================================================
-   COLE ISTO NO FIM DO style.css
-
-   Regra que passa a valer: cada cor tem UM dono.
-     amarelo  → tom, data, ação principal. Nada mais.
-     vermelho → só YouTube      (só dentro do modal de leitura)
-     verde    → só Spotify      (só dentro do modal de leitura)
-     âmbar    → só cifra        (só dentro do modal e do leitor)
-   Ministrante deixa de ser um bloco colorido e vira um ponto de
-   6px num chip neutro: dá para reconhecer a pessoa de relance
-   sem competir com o amarelo do tom.
-   ============================================================ */
-
-/* ——— Ministrantes: chip neutro + ponto de identidade ——— */
-.card-min-label,
-.tom-list-min.card-min-label{
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.09);
-  color:#C4C4C4;
-  display:inline-flex;align-items:center;
-}
-.card-min-label::before{
-  content:"";
-  width:6px;height:6px;border-radius:50%;
-  background:var(--min,#7A7A7A);
-  margin-right:7px;flex-shrink:0;
-}
-
-/* só a cor do ponto muda de pessoa para pessoa */
-.chip-Raphaela{--min:#F2789F}   /* rosa      */
-.chip-Daniela {--min:#6BA8F5}   /* azul      */
-.chip-Cris    {--min:#4FD1C5}   /* turquesa  */
-.chip-Mirian  {--min:#C084FC}   /* violeta   */
-.chip-Humberto{--min:#F97B5B}   /* coral     */
-
-/* "Todos" não é pessoa: é informação. Fica sem ponto e sem cor. */
-.chip-todos{
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.10);
-  color:#9A9A9A;
-  text-transform:uppercase;
-  font-size:10px;letter-spacing:0.1em;
-}
-.chip-todos::before{display:none}
-
-/* o mesmo ponto no ministrante escalado do culto */
-.culto-escala-nome{
-  display:inline-flex;align-items:center;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.09);
-  color:#D6D6D6;
-}
-.culto-escala-nome::before{
-  content:"";
-  width:6px;height:6px;border-radius:50%;
-  background:var(--min,#7A7A7A);
-  margin-right:7px;flex-shrink:0;
-}
-.culto-escala-vazio{color:var(--gray2)}
-.culto-escala-vazio::before{display:none}
-
-/* ——— YouTube / Spotify / Cifra viram ícones ——— */
-/* na grade eles são só sinal de "existe": monocromáticos, discretos.
-   A cor da marca aparece nos botões grandes dentro do modal.       */
-.card-ico{
-  display:inline-flex;align-items:center;justify-content:center;
-  color:#5F5F5F;transition:color 0.2s;
-}
-.card:hover .card-ico{color:#8C8C8C}
-.card-tags{gap:9px}
-
-/* ——— Rótulos de seção do culto: hierarquia, não cor ——— */
-.culto-secao-label,
-.culto-secao-pos .culto-secao-label{
-  color:var(--gray2);
-  font-size:9px;letter-spacing:0.16em;
-}
-.culto-secao-pos .culto-add-btn:hover{
-  border-color:var(--gray3);color:var(--gray);
-  background:rgba(255,255,255,0.02);
-}
-
-/* ——— Setas do leitor sem destino ——— */
-.lyra-btn:disabled{opacity:0.3;cursor:default}
-.lyra-btn:disabled:hover{background:var(--black5);border-color:var(--gray3)}
-.claro .lyra-btn:disabled:hover{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
-
-/* ——— iOS: 90vh conta a barra do Safari e corta o rodapé ——— */
-.modal{max-height:90dvh}
-.lyra-box{max-height:92dvh}
-
-/* ============================================================
-   iPad e tablets — os modais preenchem a tela
-   ============================================================ */
-@media (min-width:601px) and (max-width:1180px) and (pointer:coarse){
-
-  .overlay-bg{padding:0;align-items:stretch;justify-content:stretch}
-  .overlay-bg .modal{
-    width:100%;max-width:none;
-    height:100dvh;max-height:100dvh;
-    border:none;border-radius:0;
-  }
-  .modal-hd{padding-top:calc(24px + env(safe-area-inset-top))}
-  .modal-ft{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
-
-  .modal-hd,.modal-bd,.modal-ft{
-    width:100%;max-width:620px;
-    margin-left:auto;margin-right:auto;
-  }
-  .modal-bd{flex:1}
-
-  #lyraOverlay{padding:0}
-  .lyra-box{
-    width:100%;max-width:none;
-    height:100dvh;max-height:100dvh;
-    border:none;border-radius:0;
-    padding-top:env(safe-area-inset-top);
-    padding-bottom:env(safe-area-inset-bottom);
-  }
-}
-
-/* ============================================================
-   COLE ISTO NO FIM DO style.css
-
-   Regra que passa a valer: cada cor tem UM dono.
-     amarelo  → tom, data, ação principal. Nada mais.
-     vermelho → só YouTube      (só dentro do modal de leitura)
-     verde    → só Spotify      (só dentro do modal de leitura)
-     âmbar    → só cifra        (só dentro do modal e do leitor)
-   Ministrante deixa de ser um bloco colorido e vira um ponto de
-   6px num chip neutro: dá para reconhecer a pessoa de relance
-   sem competir com o amarelo do tom.
-   ============================================================ */
-
-/* ——— Ministrantes: chip neutro + ponto de identidade ——— */
-.card-min-label,
-.tom-list-min.card-min-label{
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.09);
-  color:#C4C4C4;
-  display:inline-flex;align-items:center;
-}
-.card-min-label::before{
-  content:"";
-  width:6px;height:6px;border-radius:50%;
-  background:var(--min,#7A7A7A);
-  margin-right:7px;flex-shrink:0;
-}
-
-/* só a cor do ponto muda de pessoa para pessoa */
-.chip-Raphaela{--min:#F2789F}   /* rosa      */
-.chip-Daniela {--min:#6BA8F5}   /* azul      */
-.chip-Cris    {--min:#4FD1C5}   /* turquesa  */
-.chip-Mirian  {--min:#C084FC}   /* violeta   */
-.chip-Humberto{--min:#F97B5B}   /* coral     */
-
-/* "Todos" não é pessoa: é informação. Fica sem ponto e sem cor. */
-.chip-todos{
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.10);
-  color:#9A9A9A;
-  text-transform:uppercase;
-  font-size:10px;letter-spacing:0.1em;
-}
-.chip-todos::before{display:none}
-
-/* o mesmo ponto no ministrante escalado do culto */
-.culto-escala-nome{
-  display:inline-flex;align-items:center;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.09);
-  color:#D6D6D6;
-}
-.culto-escala-nome::before{
-  content:"";
-  width:6px;height:6px;border-radius:50%;
-  background:var(--min,#7A7A7A);
-  margin-right:7px;flex-shrink:0;
-}
-.culto-escala-vazio{color:var(--gray2)}
-.culto-escala-vazio::before{display:none}
-
-/* ——— YouTube / Spotify / Cifra viram ícones ——— */
-/* na grade eles são só sinal de "existe": monocromáticos, discretos.
-   A cor da marca aparece nos botões grandes dentro do modal.       */
-.card-ico{
-  display:inline-flex;align-items:center;justify-content:center;
-  color:#5F5F5F;transition:color 0.2s;
-}
-.card:hover .card-ico{color:#8C8C8C}
-.card-tags{gap:9px}
-
-/* ——— Rótulos de seção do culto: hierarquia, não cor ——— */
-.culto-secao-label,
-.culto-secao-pos .culto-secao-label{
-  color:var(--gray2);
-  font-size:9px;letter-spacing:0.16em;
-}
-.culto-secao-pos .culto-add-btn:hover{
-  border-color:var(--gray3);color:var(--gray);
-  background:rgba(255,255,255,0.02);
-}
-
-/* ——— Setas do leitor sem destino ——— */
-.lyra-btn:disabled{opacity:0.3;cursor:default}
-.lyra-btn:disabled:hover{background:var(--black5);border-color:var(--gray3)}
-.claro .lyra-btn:disabled:hover{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
-
-/* ——— iOS: 90vh conta a barra do Safari e corta o rodapé ——— */
-.modal{max-height:90dvh}
-.lyra-box{max-height:92dvh}
-
-/* ============================================================
-   iPad e tablets — os modais preenchem a tela
-   ============================================================ */
-@media (min-width:601px) and (max-width:1180px) and (pointer:coarse){
-
-  .overlay-bg{padding:0;align-items:stretch;justify-content:stretch}
-  .overlay-bg .modal{
-    width:100%;max-width:none;
-    height:100dvh;max-height:100dvh;
-    border:none;border-radius:0;
-  }
-  .modal-hd{padding-top:calc(24px + env(safe-area-inset-top))}
-  .modal-ft{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
-
-  .modal-hd,.modal-bd,.modal-ft{
-    width:100%;max-width:620px;
-    margin-left:auto;margin-right:auto;
-  }
-  .modal-bd{flex:1}
-
-  #lyraOverlay{padding:0}
-  .lyra-box{
-    width:100%;max-width:none;
-    height:100dvh;max-height:100dvh;
-    border:none;border-radius:0;
-    padding-top:env(safe-area-inset-top);
-    padding-bottom:env(safe-area-inset-bottom);
-  }
-}
