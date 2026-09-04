@@ -11,11 +11,19 @@ const lyraCacheBusca = new Map();   // nome normalizado → música do Lyra (ou 
 const lyraCacheCifra = new Map();   // "slug|tom|instrumento" → texto da cifra
 const lyraCacheLetra = new Map();   // slug → letra
 
-let lyraToken  = 0;        // descarta respostas atrasadas
+let lyraToken     = 0;     // descarta carregamentos de cifra/letra atrasados
+let lyraTokenView = 0;     // descarta buscas atrasadas do modal de leitura
+let lyraNavToken  = 0;     // descarta trocas de música atrasadas (setas)
+let lyraNavegando = false; // trava a seta enquanto a troca não termina
+
 let lyraAtual  = null;     // { song, tom, instrumento, modo, tonsDaCasa, nav }
 let lyraZoom   = 100;      // tamanho do texto, em %
 let lyraQuebra = false;    // quebrar linhas longas em vez de rolar na horizontal
 let lyraClaro  = false;    // leitor no modo claro
+
+// nas pontas da lista não existe próxima/anterior com cifra:
+// a seta apaga em vez de disparar um aviso na tela
+let lyraFimLista = { ant: false, prox: false };
 
 let lyraListaVisivel = []; // repertório como está filtrado na tela
 let lyraCtxCulto = null;   // culto de onde a música foi aberta, se foi
@@ -259,23 +267,65 @@ function lyraMontarNav(m, ctxCulto) {
   };
 }
 
+// ── Setas de navegação ───────────────────────────────────────
+
+// liga/desliga as duas setas enquanto a troca está em andamento
+function lyraSetasOcupadas(ocupado) {
+  ["lyraAnt", "lyraProx"].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.disabled = ocupado;
+  });
+}
+
+// mostra as setas só quando há lista, e apaga a que não leva a lugar nenhum
+function lyraAtualizarSetas() {
+  const ant  = document.getElementById("lyraAnt");
+  const prox = document.getElementById("lyraProx");
+  if (!ant || !prox) return;
+
+  const nav = lyraAtual && lyraAtual.nav;
+  if (!nav || !nav.itens || nav.itens.length < 2) {
+    ant.style.display = prox.style.display = "none";
+    return;
+  }
+
+  ant.style.display = prox.style.display = "";
+  ant.disabled  = nav.idx <= 0                   || lyraFimLista.ant;
+  prox.disabled = nav.idx >= nav.itens.length - 1 || lyraFimLista.prox;
+}
+
 async function lyraIrPara(direcao) {
-  if (!lyraAtual || !lyraAtual.nav) return;
+  if (!lyraAtual || !lyraAtual.nav || lyraNavegando) return;
 
   const { itens } = lyraAtual.nav;
   const modo = lyraAtual.modo;
   let i = lyraAtual.nav.idx;
 
-  for (let passo = 0; passo < 40; passo++) {
-    i += direcao;
-    if (i < 0 || i >= itens.length) {
-      toast(direcao > 0 ? "Última música da lista." : "Primeira música da lista.");
-      return;
-    }
+  // já está na ponta: a seta está apagada, não há nada a fazer
+  if ((direcao > 0 && i >= itens.length - 1) || (direcao < 0 && i <= 0)) return;
 
-    const item = itens[i];
-    const song = await lyraBuscar(item.nome);
-    if (song && song.has_chords) {
+  const meuNav = ++lyraNavToken;
+  lyraNavegando = true;
+  lyraSetasOcupadas(true);
+
+  const corpo = document.getElementById("lyraCorpo");
+  const antes = corpo.innerHTML;      // volta ao que estava se nada for achado
+  corpo.innerHTML = `<div class="lyra-msg">Procurando a próxima música...</div>`;
+  lyraToken++;                        // cancela um carregamento ainda no ar
+
+  let achou = false;
+  try {
+    for (let passo = 0; passo < 40; passo++) {
+      i += direcao;
+      if (i < 0 || i >= itens.length) break;
+
+      const item = itens[i];
+      const song = await lyraBuscar(item.nome);
+      if (meuNav !== lyraNavToken) return;   // outra troca começou no meio
+      if (!song || !song.has_chords) continue;
+
+      achou = true;
+      lyraFimLista = { ant: false, prox: false };
       lyraAtual = {
         song, modo,
         tom: lyraTomDisponivel(item.tom, song.keys) || song.base_key || (song.keys || [])[0],
@@ -289,9 +339,21 @@ async function lyraIrPara(direcao) {
       lyraRenderConteudo();
       return;
     }
-  }
 
-  toast("Nenhuma outra música desta lista tem cifra.");
+    // acabou a lista naquela direção: fica onde estava, sem aviso na tela
+    if (meuNav === lyraNavToken && lyraAtual) {
+      lyraFimLista[direcao > 0 ? "prox" : "ant"] = true;
+      corpo.innerHTML = antes;
+      lyraAplicarEstiloTexto();
+    }
+  } finally {
+    if (meuNav === lyraNavToken) {
+      lyraNavegando = false;
+      lyraSetasOcupadas(false);
+      lyraAtualizarSetas();
+    }
+    if (achou) { /* o render novo cuida do resto */ }
+  }
 }
 
 // ── Ícones ───────────────────────────────────────────────────
@@ -471,6 +533,8 @@ function lyraFecharLeitor() {
   const ov = document.getElementById("lyraOverlay");
   if (ov) ov.classList.remove("open");
   document.body.classList.remove("lyra-travado");
+  lyraNavToken++;
+  lyraNavegando = false;
   lyraAtual = null;
 }
 
@@ -534,6 +598,10 @@ function lyraAbrirLeitor(song, tomPedido, tonsDaCasa, nav, modo = "cifra") {
   const keys = song.keys || [];
   const tom  = lyraTomDisponivel(tomPedido, keys) || song.base_key || keys[0];
 
+  lyraNavToken++;
+  lyraNavegando = false;
+  lyraFimLista = { ant: false, prox: false };
+
   lyraAtual = {
     song, tom, modo,
     instrumento: "teclado",
@@ -542,10 +610,7 @@ function lyraAbrirLeitor(song, tomPedido, tonsDaCasa, nav, modo = "cifra") {
   };
 
   lyraAtualizarCabecalho();
-
-  const temNav = !!(nav && nav.itens && nav.itens.length > 1);
-  document.getElementById("lyraAnt").style.display  = temNav ? "" : "none";
-  document.getElementById("lyraProx").style.display = temNav ? "" : "none";
+  lyraAtualizarSetas();
 
   document.getElementById("lyraOverlay").classList.add("open");
   document.body.classList.add("lyra-travado");
@@ -558,23 +623,7 @@ function lyraAbrirLeitor(song, tomPedido, tonsDaCasa, nav, modo = "cifra") {
 
 // ── Botões dentro do modal de leitura ────────────────────────
 
-async function lyraRenderNaView(m, nav) {
-  const meuToken = ++lyraToken;
-  const wrap = document.getElementById("viewLinksWrap");
-  if (!wrap || !m || !m.nome) return;
-
-  const song = await lyraBuscar(m.nome);
-  if (meuToken !== lyraToken) return;          // outra música foi aberta
-  if (!song || !song.has_chords) return;
-
-  // já temos a cifra aqui dentro: o link manual vira redundante e sai
-  wrap.querySelectorAll("a.view-cf-btn").forEach(el => el.remove());
-
-  const tons = [...new Set(
-    deserializarPares(m.tom).map(p => p.tom).filter(t => t && t !== "Orig.")
-  )];
-  const alvos = tons.length ? tons : [song.base_key];
-
+function lyraBlocoBotoes(song, alvos, tons, nav) {
   const bloco = document.createElement("div");
   bloco.className = "view-lyra";
   bloco.innerHTML = `
@@ -591,7 +640,53 @@ async function lyraRenderNaView(m, nav) {
   bloco.querySelector("[data-lyra-letra]").onclick =
     () => lyraAbrirLeitor(song, alvos[0], tons, nav, "letra");
 
-  wrap.appendChild(bloco);
+  return bloco;
+}
+
+async function lyraRenderNaView(m, nav) {
+  const meuToken = ++lyraTokenView;
+  const wrap = document.getElementById("viewLinksWrap");
+  if (!wrap || !m || !m.nome) return;
+
+  // já buscamos essa música antes? então a resposta chega no mesmo quadro
+  // de tela e nada pisca. Se for a primeira vez, escondemos o link manual
+  // e deixamos um espaço reservado no lugar dele até saber o resultado.
+  const emCache  = lyraCacheBusca.has(lyraNorm(m.nome));
+  const manuais  = [...wrap.querySelectorAll("a.view-cf-btn")];
+  const promessa = lyraBuscar(m.nome);
+
+  let espera = null;
+  if (!emCache) {
+    manuais.forEach(a => a.style.display = "none");
+    espera = document.createElement("div");
+    espera.className = "view-lyra";
+    espera.innerHTML =
+      `<div class="view-yt-btn view-cf-btn lyra-espera">Procurando cifra...</div>`;
+    wrap.appendChild(espera);
+  }
+
+  const song = await promessa;
+  if (espera) espera.remove();
+
+  if (meuToken !== lyraTokenView) {           // outra música foi aberta
+    manuais.forEach(a => a.style.display = "");
+    return;
+  }
+
+  if (!song || !song.has_chords) {            // sem cifra no Lyra: volta o link manual
+    manuais.forEach(a => a.style.display = "");
+    return;
+  }
+
+  // temos a cifra aqui dentro: o link manual vira redundante e sai
+  manuais.forEach(a => a.remove());
+
+  const tons = [...new Set(
+    deserializarPares(m.tom).map(p => p.tom).filter(t => t && t !== "Orig.")
+  )];
+  const alvos = tons.length ? tons : [song.base_key];
+
+  wrap.appendChild(lyraBlocoBotoes(song, alvos, tons, nav));
 }
 
 // ── Enxerto: embrulha as funções do app.js ───────────────────
@@ -621,6 +716,7 @@ abrirView = function (m, expandirTom = true) {
 const lyraFecharViewOriginal = fecharView;
 fecharView = function () {
   lyraToken++;
+  lyraTokenView++;
   lyraFecharLeitor();
   lyraFecharViewOriginal();
 };

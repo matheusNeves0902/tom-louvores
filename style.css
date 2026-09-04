@@ -1304,3 +1304,13 @@
        padding-bottom:env(safe-area-inset-bottom);
      }
    }
+
+   /* seta sem destino e espera da busca de cifra */
+.lyra-btn:disabled{opacity:0.3;cursor:default}
+.lyra-btn:disabled:hover{background:var(--black5);border-color:var(--gray3)}
+.claro .lyra-btn:disabled:hover{background:#E4DFD8;border-color:rgba(0,0,0,0.16)}
+.lyra-espera{
+  justify-content:center;
+  opacity:0.5;pointer-events:none;
+  font-size:13px;letter-spacing:0.02em;
+}
