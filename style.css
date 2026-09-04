@@ -1279,3 +1279,28 @@
    }
    .search-clear.on{display:flex}
    .search-clear:hover{color:var(--white);background:var(--black4)}
+
+   /* ============================================================
+      ÁREA SEGURA — iPhone com notch e app instalado
+      ============================================================ */
+
+   /* o header encosta no topo da tela quando roda como app:
+      o respiro entra como padding, então o fundo continua opaco
+      por baixo do relógio e da bateria */
+   .header{padding-top:env(safe-area-inset-top)}
+
+   @media(max-width:768px){
+     .search-row{top:calc(64px + env(safe-area-inset-top))}
+   }
+   @media(max-width:480px){
+     .search-row{top:calc(56px + env(safe-area-inset-top))}
+   }
+
+   /* leitor de cifra em tela cheia */
+   @media(max-width:600px){
+     .lyra-box{
+       height:100dvh;max-height:100dvh;
+       padding-top:env(safe-area-inset-top);
+       padding-bottom:env(safe-area-inset-bottom);
+     }
+   }
