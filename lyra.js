@@ -581,8 +581,9 @@ async function lyraBaixarTudo() {
   for (let i = 0; i < slugs.length; i++) {
     lyraAtualizarBotaoBaixar(`Baixando ${i + 1}/${slugs.length}`);
     try {
-      lyraCacheMusica.delete(slugs[i]);          // pega a versão atual
-      const musica = await lyraCarregarMusica(slugs[i]);
+      lyraCacheMusica.delete(slugs[i]);
+      // busca do banco mesmo que já exista no disco
+      const musica = await lyraCarregarMusica(slugs[i], true);
       await lyraGravarNoDisco(slugs[i], musica);
       ok++;
     } catch (e) {
@@ -633,12 +634,15 @@ function lyraEhLinhaDeAcorde(linha) {
 
 const lyraMusicaPendente = new Map();   // slug → carregamento em andamento
 
-async function lyraCarregarMusica(slug) {
-  if (lyraCacheMusica.has(slug))   return lyraCacheMusica.get(slug);
-  if (lyraMusicaPendente.has(slug)) return lyraMusicaPendente.get(slug);
+//  forcar = true ignora o que está guardado e busca do banco.
+//  É o que o botão "Baixar cifras" faz: sem isso ele relia o disco,
+//  regravava a mesma coisa e a edição feita no banco nunca chegava.
+async function lyraCarregarMusica(slug, forcar = false) {
+  if (!forcar && lyraCacheMusica.has(slug))   return lyraCacheMusica.get(slug);
+  if (!forcar && lyraMusicaPendente.has(slug)) return lyraMusicaPendente.get(slug);
 
   const carga = (async () => {
-    const salva = await lyraDoDisco(slug);       // já baixada: nem toca na rede
+    const salva = forcar ? null : await lyraDoDisco(slug);
     if (salva && salva.porTom.size) {
       lyraCacheMusica.set(slug, salva);
       return salva;
