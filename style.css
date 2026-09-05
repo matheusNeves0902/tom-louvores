@@ -737,7 +737,7 @@
    /* ============================================================
       CULTOS
       ============================================================ */
-   .cultos-wrap{max-width:1280px;margin:36px auto 0;padding:0 36px}
+   .cultos-wrap{max-width:1280px;margin:36px auto;padding:0 36px}
    .cultos-head{margin-bottom:18px}
    .cultos-title{
      font-family:'Bebas Neue',sans-serif;

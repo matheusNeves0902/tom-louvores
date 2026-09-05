@@ -837,13 +837,21 @@ const SECAO_LABEL = {
   principal: "Louvores",
   ofertorio: "Ofertório",
   pos:       "Pós-palavra",
+  ceia:      "Ceia",
 };
 
 // em qual seção um louvor salvo está (compatível com o formato antigo)
 function secaoDoLouvor(l) {
   if (l.ofertorio) return "ofertorio";
   if (l.pos)       return "pos";
+  if (l.ceia)      return "ceia";
   return "principal";
+}
+
+// A Ceia é no primeiro domingo do mês: dia da semana domingo e
+// data até o dia 7 (só o primeiro domingo cai nessa faixa).
+function ehPrimeiroDomingo(d) {
+  return d.getDay() === 0 && d.getDate() <= 7;
 }
 
 // próxima data (>= base) que cai no dia da semana indicado (base padrão = hoje)
@@ -897,6 +905,7 @@ function textoCultoParaCopiar(def, dados) {
   const principais = louvores.filter(l => secaoDoLouvor(l) === "principal");
   const ofertorios = louvores.filter(l => secaoDoLouvor(l) === "ofertorio");
   const posPalavra = louvores.filter(l => secaoDoLouvor(l) === "pos");
+  const ceia       = louvores.filter(l => secaoDoLouvor(l) === "ceia");
   const dataStr    = formatarDataCulto(proximaData(def.diaSemana));
 
   const linhaMusica = l => `${l.nome} — ${l.tom || "—"}`;
@@ -906,6 +915,10 @@ function textoCultoParaCopiar(def, dados) {
   if (posPalavra.length) {
     linhas.push("", "Pós-palavra:");
     posPalavra.forEach(l => linhas.push(`- ${linhaMusica(l)}`));
+  }
+  if (ceia.length) {
+    linhas.push("", "Ceia:");
+    ceia.forEach(l => linhas.push(`- ${linhaMusica(l)}`));
   }
   if (ofertorios.length) {
     linhas.push("", "Ofertório:");
@@ -1088,10 +1101,13 @@ function renderCultos() {
     const principais = [];
     const ofertorio  = [];
     const posPalavra = [];
-    louvores.forEach((l, i) => {
-      const s = secaoDoLouvor(l);
-      (s === "ofertorio" ? ofertorio : s === "pos" ? posPalavra : principais).push({ l, i });
-    });
+    const ceia       = [];
+    const balde = { ofertorio, pos: posPalavra, ceia, principal: principais };
+    louvores.forEach((l, i) => balde[secaoDoLouvor(l)].push({ l, i }));
+
+    // a Ceia só existe no culto de primeiro domingo — ou quando já
+    // houver louvor guardado nela, para nada sumir da tela
+    const temCeia = ehPrimeiroDomingo(proximaData(def.diaSemana)) || ceia.length > 0;
 
     const itensHTML = principais.length
       ? principais.map(x => louvorRowHTML(def.tipo, x.l, x.i)).join("")
@@ -1104,6 +1120,17 @@ function renderCultos() {
     const posHTML = posPalavra.length
       ? posPalavra.map(x => louvorRowHTML(def.tipo, x.l, x.i)).join("")
       : `<div class="culto-empty">Nenhum louvor de pós-palavra.</div>`;
+
+    const ceiaHTML = ceia.length
+      ? ceia.map(x => louvorRowHTML(def.tipo, x.l, x.i)).join("")
+      : `<div class="culto-empty">Nenhum louvor da Ceia.</div>`;
+
+    const secaoCeiaHTML = temCeia ? `
+      <div class="culto-secao culto-secao-ceia">
+        <div class="culto-secao-label">Ceia</div>
+        <div class="culto-secao-bd">${ceiaHTML}</div>
+        <button class="culto-add-btn culto-add-secao" onclick="abrirCultoModal('${def.tipo}','ceia')">+ Adicionar ceia</button>
+      </div>` : "";
 
     const col = document.createElement("div");
     col.className = "culto-col";
@@ -1143,7 +1170,7 @@ function renderCultos() {
           </div>
           <div class="culto-col-dia">${def.dia}</div>
         </div>
-        <span class="culto-col-count">${principais.length} ${principais.length === 1 ? "louvor" : "louvores"}</span>
+        <span class="culto-col-count">${louvores.length} ${louvores.length === 1 ? "louvor" : "louvores"}</span>
       </div>
       ${escalaHTML}
       <div class="culto-col-bd">${itensHTML}</div>
@@ -1153,6 +1180,7 @@ function renderCultos() {
         <div class="culto-secao-bd">${posHTML}</div>
         <button class="culto-add-btn culto-add-secao" onclick="abrirCultoModal('${def.tipo}','pos')">+ Adicionar pós-palavra</button>
       </div>
+      ${secaoCeiaHTML}
       <div class="culto-secao">
         <div class="culto-secao-label">Ofertório</div>
         <div class="culto-secao-bd">${ofertorioHTML}</div>
@@ -1379,6 +1407,7 @@ async function confirmarLouvorCulto() {
     const item = { musica_id: musicaId, nome, tom, data: dataAlvoCulto(cultoTipoAtual) };
     if (cultoSecaoAtual === "ofertorio") item.ofertorio = true;
     if (cultoSecaoAtual === "pos")       item.pos = true;
+    if (cultoSecaoAtual === "ceia")      item.ceia = true;
     cultos[cultoTipoAtual].louvores.push(item);
     const ok = await salvarCulto(cultoTipoAtual);
 

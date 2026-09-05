@@ -512,8 +512,8 @@ function lyraMontarBotaoBaixar() {
   estilo.textContent = `
     .lyra-dl{display:inline-flex;align-items:center;gap:7px}
     .lyra-dl:disabled{opacity:.6;cursor:default}
-    .lyra-dl.pronto{color:#B8B8B8;border-color:var(--gray3)}
-    .lyra-dl.pronto:hover{background:var(--black3);color:var(--white)}
+    .lyra-dl.pronto{color:var(--tinta);border-color:var(--tinta-3)}
+    .lyra-dl.pronto:hover{background:var(--papel-2)}
     @media(max-width:600px){.lyra-dl-txt{display:none}.lyra-dl{padding:9px 11px}}`;
   document.head.appendChild(estilo);
 
@@ -713,9 +713,21 @@ function lyraLetraParaHTML(texto) {
 function lyraMontarNav(m, ctxCulto) {
   if (ctxCulto && typeof cultos !== "undefined" && cultos[ctxCulto.tipo]) {
     const louvores = cultos[ctxCulto.tipo].louvores || [];
+
+    // A fila segue a ordem da TELA, não a ordem em que os louvores
+    // foram cadastrados. Sem isso, um louvor da Ceia adicionado
+    // antes dos outros abria como se fosse o primeiro do culto.
+    const ORDEM = { principal: 0, pos: 1, ceia: 2, ofertorio: 3 };
+    const secao = l => (typeof secaoDoLouvor === "function" ? secaoDoLouvor(l) : "principal");
+
+    const ordenados = louvores
+      .map((l, i) => ({ l, i }))
+      .sort((a, b) => (ORDEM[secao(a.l)] ?? 0) - (ORDEM[secao(b.l)] ?? 0) || a.i - b.i);
+
     return {
-      itens: louvores.map(l => ({ nome: l.nome, tom: l.tom })),
-      idx: ctxCulto.idx,
+      itens: ordenados.map(x => ({ nome: x.l.nome, tom: x.l.tom })),
+      // o índice clicado é o do array; aqui vira a posição na fila
+      idx: Math.max(0, ordenados.findIndex(x => x.i === ctxCulto.idx)),
     };
   }
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Cultos — Tom Louvores INVB</title>
+  <title>Repertório — Tom Louvores INVB</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="icon" type="image/png" href="logo3.png">
@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
 </head>
-<body class="read-only" data-pagina="cultos">
+<body class="read-only" data-pagina="repertorio">
 
 <!-- HEADER -->
 <header class="header">
@@ -40,29 +40,30 @@
   <div class="hero">
     <div>
       <div class="hero-tag">Botafogo · RJ</div>
-      <h1 class="hero-h1">LOUVORES DO<br><em>CULTO</em></h1>
-      <p class="hero-sub">O que a equipe vai cantar nos próximos cultos.</p>
+      <h1 class="hero-h1">NOSSO<br><em>REPERTÓRIO</em></h1>
+      <p class="hero-sub">Músicas, tons e ministrantes da INVB em um só lugar.</p>
     </div>
-    <!-- os números do repertório pertencem à outra página.
-         Estes campos existem só porque o app.js escreve neles. -->
-    <span id="totalMusicas" hidden></span>
-    <span id="totalTons" hidden></span>
+    <div class="hero-right-col">
+      <div class="hero-stats">
+        <div class="stat-row">
+          <span class="stat-n" id="totalMusicas">0</span>
+          <span class="stat-l">Músicas</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-n" id="totalTons">0</span>
+          <span class="stat-l">Tons</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-n">5</span>
+          <span class="stat-l">Ministr.</span>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- CULTOS -->
-<section class="cultos-wrap">
-  <!-- sem título aqui: o hero logo acima já diz "Louvores do Culto" -->
-  <div class="cultos-grid" id="cultosGrid">
-    <!-- preenchido via JS -->
-  </div>
-</section>
-
-<!-- ============================================================
-     O repertório não aparece aqui, mas os campos precisam existir:
-     o app.js conta com eles ao carregar, ao filtrar e ao salvar.
-     ============================================================ -->
-<section class="repertorio" hidden>
+<!-- REPERTÓRIO -->
+<section class="repertorio">
   <div class="toolbar">
     <div class="search-row">
       <div class="search-wrap">
@@ -81,13 +82,28 @@
       </select>
     </div>
   </div>
+
   <div class="grid-wrap">
     <div class="grid" id="grid">
-      <div class="state-loading" id="stLoading"><div class="spinner"></div></div>
-      <div class="state-empty" id="stEmpty"></div>
+      <div class="state-loading" id="stLoading">
+        <div class="spinner"></div>
+        <p style="font-size:12px;color:#555;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Carregando...</p>
+      </div>
+      <div class="state-empty" id="stEmpty">
+        <div class="empty-sym">NO SONGS</div>
+        <p class="empty-ttl">Nenhuma música</p>
+        <p class="empty-sub">Clique em "+ Nova Música" para começar.</p>
+      </div>
     </div>
   </div>
 </section>
+
+<!-- ============================================================
+     Os cultos não existem nesta página: o paginas.js desliga o
+     carregamento e o desenho deles. A grade fica só como âncora
+     vazia, caso algum script procure por ela.
+     ============================================================ -->
+<div class="cultos-grid" id="cultosGrid" hidden></div>
 
 <!-- MODAL ADICIONAR LOUVOR AO CULTO -->
 <div class="overlay-bg" id="cultoOverlay" onclick="cultoFecharFora(event)">
