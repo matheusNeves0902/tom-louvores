@@ -45,7 +45,11 @@ function lyraSalvarPrefs() {
 
 function lyraNorm(s = "") {
   return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-          .trim().toLowerCase().replace(/\s+/g, " ");
+          .toLowerCase()
+          // medley escrito de dois jeitos: "A/B", "A / B" e "A + B"
+          // passam a virar a mesma coisa
+          .replace(/[\/+]/g, " / ")
+          .replace(/\s+/g, " ").trim();
 }
 
 function lyraEsc(s = "") {
@@ -220,18 +224,12 @@ function lyraNoIndice(nome) {
   const cheia = lyraNorm(nome);
   const curta = lyraChaveCurta(nome);
 
-  const direta = lyraIndice.get(cheia) || lyraIndice.get(curta);
-  if (direta) return direta;
-
-  // um lado tem o complemento e o outro não:
-  // "Clamo Jesus" × "Clamo Jesus (part. Marsena)"
-  if (curta.length >= 5) {
-    for (const [chave, song] of lyraIndice) {
-      if (chave.length < 5) continue;
-      if (chave.startsWith(curta) || curta.startsWith(chave)) return song;
-    }
-  }
-  return null;
+  // só igualdade. Nada de "começa com": senão "O Fogo Arderá"
+  // casaria com o medley "O Fogo Arderá / Ah Jesus / ..." e as duas
+  // músicas abririam a mesma cifra.
+  // O caso "Clamo Jesus" × "Clamo Jesus (part. Marsena)" continua
+  // funcionando porque o índice guarda a versão sem parênteses.
+  return lyraIndice.get(cheia) || lyraIndice.get(curta) || null;
 }
 
 // ── Busca da música ──────────────────────────────────────────
@@ -269,7 +267,6 @@ async function lyraBuscar(nome) {
         const curta = lyraChaveCurta(nome);
         achada = res.find(s => lyraNorm(s.title) === chave)
               || res.find(s => lyraChaveCurta(s.title) === curta)
-              || res.find(s => lyraChaveCurta(s.title).startsWith(curta))
               || null;
         // resposta enxuta às vezes não traz has_chords: não invente "não tem"
         if (achada && achada.has_chords === undefined) achada.has_chords = true;
