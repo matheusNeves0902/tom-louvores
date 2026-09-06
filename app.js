@@ -1454,7 +1454,23 @@ window.addEventListener("resize", onScrollBusca);
 aplicarEstadoAuth();
 onScrollBusca();
 
-(async () => {
-  await carregar();          // repertório
-  await carregarCultos();    // cultos
-})();
+//  Em paralelo, não em fila: os cultos respondem em ~100ms e o
+//  repertório em ~800ms, e esperar um pelo outro deixava a página
+//  em branco à toa.
+//
+//  Só que o disparo espera o DOMContentLoaded de propósito: os
+//  arquivos carregados depois deste (paginas.js) trocam o que
+//  cada página faz — sem a espera, a busca sairia antes da troca
+//  e a página do repertório voltaria a buscar cultos.
+function iniciar() {
+  return Promise.all([
+    carregar(),        // repertório
+    carregarCultos(),  // cultos
+  ]);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", iniciar);
+} else {
+  iniciar();
+}

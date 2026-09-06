@@ -14,6 +14,10 @@ const CULTO_HORARIOS = {
     domingo_noite: { dia: 0, h: 19, min: 0  },
   };
   
+  // por quantas horas um culto que já começou continua sendo o
+  // culto mostrado ao abrir o site
+  const CULTO_JANELA_H = 6;
+  
   const CULTO_TOM_NOVO = "__novo__";
   
   const CULTO_TONS = [
@@ -38,9 +42,19 @@ const CULTO_HORARIOS = {
     d.setDate(d.getDate() + ((h.dia - d.getDay() + 7) % 7));
     d.setHours(h.h, h.min, 0, 0);
   
-    // já passou hoje → semana que vem
-    if (d < agora) d.setDate(d.getDate() + 7);
+    // Um culto continua sendo "o culto" por algumas horas depois de
+    // começar. Sem isso, às 10h01 de domingo a escala da manhã já
+    // pulava para a semana seguinte, e quem abrisse o site no meio
+    // do louvor via os louvores errados.
+    if (d.getTime() + CULTO_JANELA_H * 3600e3 < agora.getTime())
+      d.setDate(d.getDate() + 7);
     return d;
+  }
+  
+  // já começou e ainda está dentro da janela
+  function cultoEmAndamento(tipo, agora = new Date()) {
+    const d = cultoProximaOcorrencia(tipo, agora);
+    return !!d && d <= agora;
   }
   
   // qual culto acontece primeiro a partir de agora
@@ -57,6 +71,16 @@ const CULTO_HORARIOS = {
     const d = cultoProximaOcorrencia(tipo);
     return d ? d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : "";
   }
+  
+  (function cultoEstiloAgora() {
+    const st = document.createElement("style");
+    st.textContent = `
+    .culto-seletor-data.culto-agora{
+      color:#0f1a12;background:#8FE84A;border-radius:6px;padding:2px 9px;
+      font-weight:800;letter-spacing:.04em;text-transform:uppercase;font-size:11px;
+    }`;
+    document.head.appendChild(st);
+  })();
   
   function cultoMontarSeletor() {
     if (document.getElementById("cultoSeletor")) return;
@@ -75,6 +99,7 @@ const CULTO_HORARIOS = {
   
     document.getElementById("cultoSeletorSel").addEventListener("change", e => {
       cultoSelecionado = e.target.value;
+      cultoEscolhaManual = true;   // não trocar por baixo de quem escolheu
       cultoAplicarSelecao();
     });
   }
@@ -99,8 +124,15 @@ const CULTO_HORARIOS = {
     const badge = document.getElementById("cultoSeletorData");
     const todos = cultoSelecionado === "todos";
   
-    if (sel)   sel.value = cultoSelecionado;
-    if (badge) badge.textContent = todos ? "—" : cultoDataCurta(cultoSelecionado);
+    if (sel) sel.value = cultoSelecionado;
+  
+    if (badge) {
+      // enquanto o culto acontece, "agora" diz mais que a data,
+      // que já aparece no cartão logo abaixo
+      const rolando = !todos && cultoEmAndamento(cultoSelecionado);
+      badge.textContent = todos ? "—" : (rolando ? "agora" : cultoDataCurta(cultoSelecionado));
+      badge.classList.toggle("culto-agora", !!rolando);
+    }
   
     grid.classList.toggle("solo", !todos);
   
@@ -376,3 +408,20 @@ const CULTO_HORARIOS = {
     cultoRemoverBlocoTom();
     cultoFecharViewOriginal();
   };
+  
+  // A janela vira sozinha: quem deixa o site aberto durante o culto
+  // vê a escala trocar na hora certa, sem recarregar. Só age quando
+  // a pessoa não escolheu um culto na mão.
+  let cultoEscolhaManual = false;
+  
+  const cultoTrocaOriginal = cultoAplicarSelecao;
+  cultoAplicarSelecao = function (...a) { return cultoTrocaOriginal.apply(this, a); };
+  
+  setInterval(() => {
+    if (!document.getElementById("cultoSeletorSel")) return;
+    if (cultoEscolhaManual) { cultoAplicarSelecao(); return; }
+    const novo = cultoMaisProximo();
+    if (novo !== cultoSelecionado) cultoSelecionado = novo;
+    cultoPreencherSeletor();
+    cultoAplicarSelecao();
+  }, 60000);

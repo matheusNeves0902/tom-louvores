@@ -271,9 +271,21 @@
 <script src="config.js"></script>
 <script src="app.js"></script>
 <script src="lyra.js"></script>
+<script src="acordes.js"></script>
+<script src="sons.js"></script>
+<script src="opcoes.js"></script>
+<script src="afinador.js"></script>
+<script src="metronomo.js"></script>
 <script src="vista-lista.js"></script>
 <script src="culto-seletor.js"></script>
 <script src="busca-limpar.js"></script>
 <script src="paginas.js"></script>
+<script src="atualizar.js"></script>
+<script>
+// guarda o app no aparelho: abre instantâneo e funciona sem internet
+if ("serviceWorker" in navigator) {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
 </body>
 </html>

@@ -498,6 +498,16 @@ const LYRA_ICO_OK     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="n
 
 let lyraBaixando = false;
 
+//  Pinta o quanto já baixou dentro do próprio botão: uma faixa
+//  que avança por trás do texto. Passar null apaga a faixa.
+function lyraProgresso(pct) {
+  const b = document.getElementById("lyraBaixar");
+  if (!b) return;
+  if (pct === null) { b.style.removeProperty("--dl"); b.classList.remove("baixando"); return; }
+  b.classList.add("baixando");
+  b.style.setProperty("--dl", pct + "%");
+}
+
 function lyraSlugsDoIndice() {
   if (!lyraIndice) return [];
   return [...new Set([...lyraIndice.values()].map(s => s.slug))];
@@ -510,8 +520,24 @@ function lyraMontarBotaoBaixar() {
 
   const estilo = document.createElement("style");
   estilo.textContent = `
-    .lyra-dl{display:inline-flex;align-items:center;gap:7px}
-    .lyra-dl:disabled{opacity:.6;cursor:default}
+    /* divisões da música: verde-água, para separar do laranja
+       dos acordes sem competir com ele */
+    .lyra-secao{color:#6FD3C7;font-weight:700;letter-spacing:.02em}
+    .claro .lyra-secao{color:#0F7D6F}
+    .lyra-dl{display:inline-flex;align-items:center;gap:7px;position:relative;overflow:hidden}
+    .lyra-dl:disabled{opacity:1;cursor:default}
+    /* a faixa cresce por trás do texto, do zero até cem por cento */
+    .lyra-dl.baixando::before{
+      content:"";position:absolute;left:0;top:0;bottom:0;
+      width:var(--dl,0%);
+      background:rgba(255,224,0,0.22);
+      transition:width .25s ease;
+      pointer-events:none;
+    }
+    .lyra-dl.baixando{border-color:var(--yellow);color:var(--yellow)}
+    .lyra-dl > *{position:relative;z-index:1}
+    /* enquanto baixa, o texto aparece mesmo no celular */
+    .lyra-dl.baixando .lyra-dl-txt{display:inline!important;font-variant-numeric:tabular-nums}
     .lyra-dl.pronto{color:var(--tinta);border-color:var(--tinta-3)}
     .lyra-dl.pronto:hover{background:var(--papel-2)}
     @media(max-width:600px){.lyra-dl-txt{display:none}.lyra-dl{padding:9px 11px}}`;
@@ -579,7 +605,9 @@ async function lyraBaixarTudo() {
   let ok = 0, falhas = 0, cheio = false;
 
   for (let i = 0; i < slugs.length; i++) {
-    lyraAtualizarBotaoBaixar(`Baixando ${i + 1}/${slugs.length}`);
+    const pct = Math.round((i / slugs.length) * 100);
+    lyraAtualizarBotaoBaixar(`${i + 1}/${slugs.length} · ${pct}%`);
+    lyraProgresso(pct);
     try {
       lyraCacheMusica.delete(slugs[i]);
       // busca do banco mesmo que já exista no disco
@@ -596,6 +624,8 @@ async function lyraBaixarTudo() {
     }
   }
 
+  lyraProgresso(100);
+  setTimeout(() => lyraProgresso(null), 900);
   lyraBaixando = false;
   if (btn) btn.disabled = false;
   lyraAtualizarBotaoBaixar();
@@ -615,15 +645,35 @@ if (document.readyState === "loading") {
 
 // ── Reconhecer linhas de acorde ──────────────────────────────
 
-const LYRA_RE_ACORDE = /^[A-G](#|b)?(m|maj|min|sus|dim|aug|add|M)?\d*(\((.*?)\))?(\/[A-G](#|b)?)?$/;
+//  Aceita qualificador e número em qualquer ordem: E7M(9), C#m7(11),
+//  A7(2), Bm, F#/A#. Antes o "7M" não passava, porque o número vinha
+//  obrigatoriamente depois da letra, e a linha inteira deixava de ser
+//  tratada como linha de acorde.
+const LYRA_RE_ACORDE = /^[A-G](#|b)?((m|maj|min|sus|dim|aug|add|M|°|\+)|\d+|\(.*?\))*(\/[A-G](#|b)?)?$/;
 
 function lyraEhLinhaDeAcorde(linha) {
   const t = linha.trim();
   if (!t) return false;
   if (t.startsWith("[")) return true;              // [Intro], [Refrão]...
-  const tokens = t.split(/\s+/).filter(Boolean);
+  //  Parênteses, barras de compasso e traços não são palavras:
+  //  entravam na conta e derrubavam a proporção. Uma linha como
+  //  "( Cm  Cm7(9) )" tem 2 acordes em 4 pedaços — 0,50 — e ficava
+  //  de fora, sem cor e sem clique.
+  const tokens = t.split(/\s+/).filter(Boolean)
+    .filter(tk => !/^[()\[\]|/\-–—.,:;]+$/.test(tk));
   if (!tokens.length) return false;
-  const acordes = tokens.filter(tk => LYRA_RE_ACORDE.test(tk.replace(/^\[|\]$/g, "")));
+
+  //  Tenta o pedaço como veio. Só se falhar tira um par de
+  //  parênteses que o envolva — cortar o fecha-parênteses sem
+  //  critério estragava "Cm7(9)", que vira "Cm7(9" e não é nada.
+  const ehAcorde = tk => {
+    if (LYRA_RE_ACORDE.test(tk)) return true;
+    const semColchete = tk.replace(/^\[|\]$/g, "");
+    if (LYRA_RE_ACORDE.test(semColchete)) return true;
+    const m = semColchete.match(/^\((.*)\)$/);
+    return !!m && LYRA_RE_ACORDE.test(m[1]);
+  };
+  const acordes = tokens.filter(ehAcorde);
   return acordes.length / tokens.length >= 0.6;
 }
 
@@ -695,9 +745,19 @@ async function lyraCarregarLetra(slug) {
 
 // ── Montagem do texto na tela ────────────────────────────────
 
+//  A divisão da música — [Intro], [Refrão], [Segunda Parte] —
+//  ganha classe própria. Antes caía no mesmo laranja dos acordes
+//  e o olho tinha que ler para saber se era estrutura ou nota.
+function lyraEhSecao(linha) {
+  const t = linha.trim();
+  return t.startsWith("[") && t.endsWith("]");
+}
+
 function lyraCifraParaHTML(texto) {
   return texto.split("\n").map(linha => {
-    const cls = lyraEhLinhaDeAcorde(linha) ? "lyra-acordes" : "lyra-letra";
+    const cls = lyraEhSecao(linha) ? "lyra-secao"
+              : lyraEhLinhaDeAcorde(linha) ? "lyra-acordes"
+              : "lyra-letra";
     return `<span class="${cls}">${lyraEsc(linha) || " "}</span>`;
   }).join("\n");
 }
