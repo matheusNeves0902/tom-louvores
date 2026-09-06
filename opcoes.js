@@ -118,8 +118,9 @@ const opEhCelular = () => OP_MQ.matches;
 
   .op-hd{
     display:flex;align-items:center;justify-content:space-between;
-    margin-bottom:14px;
+    margin-bottom:14px;flex:0 0 auto;
   }
+  .op-pega{flex:0 0 auto}
   .op-hd h4{
     margin:0;font-family:'Inter',sans-serif;
     font-size:12px;font-weight:800;letter-spacing:.14em;
@@ -144,12 +145,18 @@ const opEhCelular = () => OP_MQ.matches;
     background:rgba(255,255,255,.03);
     border:1px solid var(--gray3);
     border-radius:12px;overflow:hidden;margin-bottom:12px;
+    /*  O painel é uma coluna flex. Sem isto, quando o conteúdo
+        passa da altura da tela, cada grupo é espremido pelo flex
+        e o overflow:hidden acima corta as linhas pela metade —
+        era o Capotraste e o Fundo claro aparecendo cortados. */
+    flex:0 0 auto;
   }
   .claro .op-grupo{background:rgba(0,0,0,.02);border-color:rgba(0,0,0,.12)}
 
   .op-linha{
     display:flex;align-items:center;gap:12px;
     padding:12px 14px;min-height:54px;
+    flex:0 0 auto;
   }
   .op-linha + .op-linha{border-top:1px solid var(--gray3)}
   .claro .op-linha + .op-linha{border-top-color:rgba(0,0,0,.10)}

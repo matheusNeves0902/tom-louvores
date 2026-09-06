@@ -90,6 +90,27 @@ async function somCarregar(inst, midi) {
 //  Toca a amostra. Se ela ainda não chegou, o pedido é feito e a
 //  nota sai pela síntese antiga — melhor um som imperfeito na
 //  hora do que silêncio esperando a rede.
+//  Saída comum de todas as amostras. O limitador segura os picos:
+//  sem ele, subir o ganho para a nota solta ficar audível faria o
+//  acorde de seis cordas estourar, porque lá os volumes somam.
+let somSaida = null;
+
+function somDestino() {
+  const ctx = acCtx();
+  if (somSaida && somSaida.context === ctx) return somSaida;
+
+  const limite = ctx.createDynamicsCompressor();
+  limite.threshold.setValueAtTime(-8, ctx.currentTime);
+  limite.knee.setValueAtTime(6, ctx.currentTime);
+  limite.ratio.setValueAtTime(12, ctx.currentTime);
+  limite.attack.setValueAtTime(0.003, ctx.currentTime);
+  limite.release.setValueAtTime(0.25, ctx.currentTime);
+  limite.connect(ctx.destination);
+
+  somSaida = limite;
+  return somSaida;
+}
+
 function somTocar(inst, midi, quando, dur, ganho = 1) {
   const cfg = SOM_INSTRUMENTOS[inst];
   const nota = Math.max(cfg.min, Math.min(cfg.max, midi));
@@ -111,7 +132,7 @@ function somTocar(inst, midi, quando, dur, ganho = 1) {
   g.gain.setValueAtTime(ganho * cfg.ganho, quando + dur * 0.72);
   g.gain.exponentialRampToValueAtTime(0.0001, quando + dur + 0.45);
 
-  src.connect(g); g.connect(ctx.destination);
+  src.connect(g); g.connect(somDestino());
   src.start(quando);
   src.stop(quando + dur + 0.5);
   acTocando.push(src);

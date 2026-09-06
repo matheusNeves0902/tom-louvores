@@ -366,10 +366,15 @@ function afPintarBase() {
       // toca a corda como referência, usando a voz de violão
       const m = cordas[Number(b.dataset.c)].midi;
       const t = acCtx().currentTime + 0.05;
-      // a referência sai no instrumento que está sendo afinado
+      //  A referência sai no instrumento que está sendo afinado, e
+      //  bem mais alto que uma nota de acorde: aqui soa uma nota
+      //  sozinha, enquanto num acorde seis somam. Com o mesmo
+      //  ganho, esta parecia baixa demais. O baixo sobe mais ainda,
+      //  porque grave é ouvido como mais fraco na mesma potência.
+      const forca = afInst === "baixo" ? 3.4 : 2.6;
       if (typeof somTocar === "function" &&
-          somTocar(afInst === "baixo" ? "baixo" : "violao", m, t, 1.8, 0.9)) return;
-      if (typeof acVozViolao === "function") acVozViolao(m, t, 1.8, 0.5);
+          somTocar(afInst === "baixo" ? "baixo" : "violao", m, t, 2.2, forca)) return;
+      if (typeof acVozViolao === "function") acVozViolao(m, t, 2.2, 1.3);
     }));
   afLimpar();
 }
@@ -414,10 +419,19 @@ async function afLigar() {
 }
 
 function afParar() {
+  const tinhaMicrofone = !!afStream;
+
   if (afRaf) cancelAnimationFrame(afRaf);
   if (afStream) afStream.getTracks().forEach(t => t.stop());
   if (afCtx) afCtx.close();
   afStream = afCtx = afAnalisador = null; afSuave = null;
+
+  //  Com o microfone aberto, o navegador entra em modo de chamada
+  //  e abaixa a saída para o alto-falante não realimentar o eco.
+  //  Soltar o microfone não desfaz isso sozinho: o contexto de
+  //  áudio continua na sessão rebaixada. Refazer o contexto é o
+  //  que devolve o volume dos acordes e do metrônomo.
+  if (tinhaMicrofone) afRestaurarSaida();
   const b = document.getElementById("afMic");
   if (b) { b.textContent = "Ligar o microfone"; b.classList.remove("ativo"); }
   afLimpar();
@@ -429,6 +443,22 @@ function afParar() {
 //  corda em menos de 50ms.
 const AF_INTERVALO = 50;
 let afUltima = 0;
+
+//  Fecha o contexto compartilhado para que o próximo som crie um
+//  novo, já fora do modo de chamada. As amostras são soltas junto,
+//  mas voltam do disco sem passar pela rede.
+function afRestaurarSaida() {
+  try {
+    if (typeof acAudio !== "undefined" && acAudio) {
+      const velho = acAudio;
+      acAudio = null;
+      if (typeof somSaida !== "undefined") somSaida = null;
+      if (typeof somBuffers !== "undefined") somBuffers.clear();
+      if (typeof acTocando !== "undefined") acTocando = [];
+      velho.close();
+    }
+  } catch (e) { /* já estava fechado */ }
+}
 
 function afOuvirLoop(agora) {
   if (!afAnalisador) return;
