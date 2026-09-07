@@ -1132,13 +1132,18 @@ function acOuvir(nome, botao) {
 
   const ctx = acCtx();
   const t0 = ctx.currentTime + 0.06;
-  const passo = 0.38;
 
-  notas.forEach((m, i) => acNota(m, t0 + i * passo, 0.95));       // uma a uma
+  //  Nota a nota, um pouco mais ligeiro. A 0,38s a sequência
+  //  arrastava — para conferir um acorde não é preciso ouvir cada
+  //  nota inteira, só reconhecê-la. A duração também encurta junto,
+  //  senão uma nota ainda soa quando a seguinte entra.
+  const passo = 0.26;
+
+  notas.forEach((m, i) => acNota(m, t0 + i * passo, 0.7));        // uma a uma
 
   // e o acorde: no violão as cordas entram em sequência rápida,
   // como uma palhetada; no piano as notas caem juntas
-  const juntas = t0 + notas.length * passo + 0.22;
+  const juntas = t0 + notas.length * passo + 0.26;
   const arrastada = acAba === "teclado" ? 0 : 0.022;
   notas.forEach((m, i) =>
     acNota(m, juntas + i * arrastada, 2.1, acAba === "teclado" ? 0.15 : 0.40));
