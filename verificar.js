@@ -20,10 +20,11 @@ async function verificar(opcoes = {}) {
     // ── 1. todos os arquivos carregaram, na ordem certa ──
     const modulos = {
       "app.js": "carregar", "lyra.js": "lyraCarregarIndice",
-      "acordes.js": "acLer", "sons.js": "somTocar",
+      "acordes.js": "acLer",
       "opcoes.js": "opMontar", "afinador.js": "afDetectar",
       "metronomo.js": "mtComecar", "atualizar.js": "frescoAtualizar",
       "culto-seletor.js": "cultoProximaOcorrencia",
+      "sons.js": "somTocar",
     };
     Object.entries(modulos).forEach(([arq, fn]) =>
       t(`carregou ${arq}`, typeof window[fn] === "function"));

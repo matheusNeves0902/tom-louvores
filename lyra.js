@@ -635,6 +635,24 @@ async function lyraBaixarTudo() {
   if (cheio)       toast(`Armazenamento cheio. ${ok} de ${slugs.length} salvas.`, true);
   else if (falhas) toast(`${ok} salvas, ${falhas} sem conexão.`, true);
   else             toast(`${ok} ${ok === 1 ? "cifra guardada" : "cifras guardadas"} ✓${baixado}`);
+
+  //  Recarrega no fim, para a página passar a usar o que acabou de
+  //  ser guardado. A espera de 1,6s deixa a mensagem ser lida — e
+  //  com o leitor aberto a recarga é adiada, senão a cifra que a
+  //  pessoa está lendo sumiria da tela no meio do louvor.
+  if (!cheio && !falhas) setTimeout(lyraRecarregarDepoisDeBaixar, 1600);
+}
+
+function lyraRecarregarDepoisDeBaixar() {
+  const leitorAberto = document.getElementById("lyraOverlay")?.classList.contains("open");
+  const modalAberto  = document.querySelector(".overlay-bg.open, .overlay.open");
+
+  if (leitorAberto || modalAberto) {
+    // tenta de novo quando a tela estiver livre
+    setTimeout(lyraRecarregarDepoisDeBaixar, 2000);
+    return;
+  }
+  location.reload();
 }
 
 if (document.readyState === "loading") {

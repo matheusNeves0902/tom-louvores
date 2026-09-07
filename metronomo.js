@@ -29,7 +29,7 @@ const MT_OLHADA = 25;              // de quanto em quanto se olha a fila
   }
   .mt-painel.on{transform:none}
   .claro .mt-painel{background:#F4F0E9;border-top-color:rgba(0,0,0,.14)}
-  @media (min-width:1100px){ .lyra-box.op-fixo .mt-painel{left:320px} }
+  @media (min-width:1100px){ .lyra-box.op-fixo .mt-painel{left:var(--op-menu)} }
 
   .mt-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
   .mt-hd h4{margin:0;font-family:'Inter',sans-serif;font-size:12px;font-weight:800;
@@ -100,6 +100,10 @@ const MT_OLHADA = 25;              // de quanto em quanto se olha a fila
     font-family:'Inter',sans-serif;font-size:14.5px;font-weight:800;
   }
   .mt-tocar.on{background:none;border:1px solid var(--gray3);color:#ddd}
+  .mt-ativo{
+    background:var(--cifra)!important;color:#1a1a1a!important;
+    border-color:var(--cifra)!important;font-variant-numeric:tabular-nums;
+  }
   .claro .mt-tocar{background:var(--cifra-claro);color:#fff}
   .mt-batendo{
     flex:0 0 122px;padding:15px 8px;border-radius:12px;cursor:pointer;
@@ -165,6 +169,7 @@ function mtParar() {
   clearInterval(mtTimer);
   document.querySelectorAll(".mt-luz").forEach(l => l.classList.remove("acesa"));
   mtPintar();
+  mtPintarAtalho();
 }
 
 // ── bater o tempo com o dedo ────────────────────────────────
@@ -263,6 +268,21 @@ function mtPainel() {
   return p;
 }
 
+//  Com o painel fechado, o único jeito de saber que o metrônomo
+//  segue tocando é a linha do menu. Ela passa a mostrar o
+//  andamento e vira botão de parar.
+function mtPintarAtalho() {
+  const linha = document.getElementById("opLinhaMetronomo");
+  if (!linha) return;
+  const b = linha.querySelector("button");
+  if (!b) return;
+  b.textContent = mtRodando ? `${mtBpm} · parar` : "Abrir";
+  b.classList.toggle("mt-ativo", mtRodando);
+  b.onclick = mtRodando
+    ? (e) => { e.stopPropagation(); mtParar(); }
+    : () => mtAbrir();
+}
+
 function mtPintar(digitando = false) {
   const p = document.getElementById("mtPainel");
   if (!p) return;
@@ -286,6 +306,7 @@ function mtPintar(digitando = false) {
   const t = p.querySelector("#mtTocar");
   t.textContent = mtRodando ? "Parar" : "Começar";
   t.classList.toggle("on", mtRodando);
+  mtPintarAtalho();
 }
 
 function mtAbrir() {
@@ -299,10 +320,13 @@ function mtAbrir() {
   }
 }
 
+//  Fechar o painel NÃO para o tempo: quem liga o metrônomo quer
+//  tocar junto com a cifra, e a cifra está atrás do painel. Parar
+//  só pelo botão, ou ao sair da música.
 function mtFechar() {
-  mtParar();
   document.getElementById("mtPainel")?.classList.remove("on");
   if (!OP_LARGO()) document.getElementById("opFundo")?.classList.remove("on");
+  mtPintarAtalho();
 }
 
 // ── linha no menu ───────────────────────────────────────────
@@ -336,4 +360,8 @@ const mtOpAbrir = opAbrir;
 opAbrir = function (...a) { document.getElementById("mtPainel")?.classList.remove("on"); return mtOpAbrir.apply(this, a); };
 
 const mtFecharLeitor = lyraFecharLeitor;
-lyraFecharLeitor = function (...a) { mtFechar(); return mtFecharLeitor.apply(this, a); };
+lyraFecharLeitor = function (...a) {
+  mtParar();          // sair da música para de verdade
+  mtFechar();
+  return mtFecharLeitor.apply(this, a);
+};

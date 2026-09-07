@@ -175,7 +175,7 @@ let afSuave = null;                       // leitura amaciada, para o ponteiro n
   .af-painel.on{transform:none}
   .claro .af-painel{background:#F4F0E9;border-top-color:rgba(0,0,0,.14)}
   @media (min-width:1100px){
-    .lyra-box.op-fixo .af-painel{left:320px}
+    .lyra-box.op-fixo .af-painel{left:var(--op-menu)}
   }
 
   .af-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}

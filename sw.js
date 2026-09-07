@@ -13,7 +13,7 @@
 //      cache como rede de segurança quando ela falha
 // ============================================================
 
-const CACHE = "tom-louvores-v3";
+const CACHE = "tom-louvores-v8";
 
 const APP = [
   "./",
@@ -24,7 +24,6 @@ const APP = [
   "./app.js",
   "./lyra.js",
   "./acordes.js",
-  "./sons.js",
   "./opcoes.js",
   "./afinador.js",
   "./metronomo.js",
@@ -33,12 +32,19 @@ const APP = [
   "./busca-limpar.js",
   "./paginas.js",
   "./atualizar.js",
+  "./sons.js",
 
   //  Sem estes, o app abria offline mas sem o fundo do topo e sem
   //  o ícone na tela de início do celular.
+  //
+  //  São logo2 e logo3 porque são os que as páginas usam de fato:
+  //  eu tinha posto "logo.png" no chute, e o resultado era guardar
+  //  um arquivo que ninguém exibe e deixar de fora os dois que
+  //  aparecem na tela.
   "./manifest.json",
   "./image.jpg",
-  "./logo.png",
+  "./logo2.png",
+  "./logo3.png",
 ];
 
 self.addEventListener("install", e => {

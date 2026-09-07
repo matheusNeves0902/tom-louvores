@@ -362,6 +362,25 @@ let acAba  = localStorage.getItem("tl_aba_acorde") || "violao";
   .ac-painel.on{transform:none}
   .claro .ac-painel{background:#F1EDE6;border-top-color:rgba(0,0,0,.14)}
 
+  /*  Com o menu fixo à esquerda, o painel começa onde ele termina,
+      como já fazem o afinador e o metrônomo. Sem esta regra ele
+      nascia em zero e o diagrama ficava por baixo do menu. */
+  @media (min-width:1100px){
+    .lyra-box.op-fixo .ac-painel{left:var(--op-menu)}
+  }
+
+  /*  Numa faixa de mil pixels o conteúdo encostado à esquerda fica
+      perdido no canto. Ele passa a ocupar uma coluna centrada, do
+      tamanho do que precisa mostrar. */
+  .ac-painel > *{max-width:520px;margin-left:auto;margin-right:auto}
+  .ac-painel .ac-hd{width:100%}
+  /*  As abas e o capotraste têm largura própria: sem display de
+      bloco, a margem automática não tem o que centralizar. */
+  .ac-painel .ac-abas{display:flex;width:fit-content}
+  .ac-painel .ac-capo{justify-content:center}
+  .ac-formas{justify-content:center}
+  .ac-painel .ac-teclado{display:block;margin:0 auto}
+
   .ac-hd{display:flex;align-items:center;gap:12px;margin-bottom:12px}
   .ac-nome-ac{font-size:22px;font-weight:800;color:var(--cifra);letter-spacing:.02em}
   .claro .ac-nome-ac{color:var(--cifra-claro)}
@@ -640,10 +659,22 @@ function acDesenhar() {
   if (ou) ou.addEventListener("click", () => acOuvir(acAtual, ou));
 }
 
-// clique em qualquer acorde da cifra
+//  Toque num acorde da cifra.
+//
+//  No celular abre só o balão, em cima da nota: o painel inteiro
+//  cobria meia tela para mostrar um diagrama, e quem está tocando
+//  perde a linha da cifra de vista. No computador o toque continua
+//  abrindo o painel, que ali cabe ao lado do texto.
 document.addEventListener("click", e => {
   const b = e.target.closest(".ac-tk");
-  if (b) { e.preventDefault(); acAbrir(b.dataset.ac); }
+  if (b) {
+    e.preventDefault();
+    if (AC_TEM_HOVER) acAbrir(b.dataset.ac);
+    else acMostrarBalao(b, true);
+    return;
+  }
+  // tocar fora recolhe o balão
+  if (!AC_TEM_HOVER && !e.target.closest(".ac-balao")) acEsconderBalao();
 });
 
 // ── rolagem automática ──────────────────────────────────────
@@ -800,6 +831,18 @@ let acBalaoAc  = null;
   }
   .claro .ac-balao-nome{color:var(--cifra-claro)}
   .ac-balao .ac-svg{width:104px}
+
+  /*  No celular o balão é o único diagrama que aparece, então os
+      botões crescem para caberem no dedo. */
+  @media (max-width: 820px), (pointer: coarse){
+    .ac-balao{padding:12px 14px 10px}
+    .ac-balao .ac-svg{width:124px}
+    .ac-balao .ac-teclado{width:206px}
+    .ac-balao-nome{font-size:16px;margin-bottom:6px}
+    .ac-variar{padding:7px 13px;font-size:12px}
+    .ac-so-som{padding:7px 11px}
+    .ac-balao-pe{gap:12px;margin-top:7px}
+  }
   .ac-balao .ac-teclado{width:186px}
   .ac-pe-so{justify-content:center}
   .ac-balao-pe .ac-balao-casa{font-variant:tabular-nums}
@@ -832,8 +875,8 @@ function acBalao() {
   return b;
 }
 
-function acMostrarBalao(tk) {
-  if (!AC_TEM_HOVER) return;
+function acMostrarBalao(tk, forcar = false) {
+  if (!AC_TEM_HOVER && !forcar) return;
   const b = acBalao();
   if (!b) return;
   const nome = tk.dataset.ac;
@@ -841,11 +884,20 @@ function acMostrarBalao(tk) {
   acPintarBalao();
 
   b.classList.add("on");
-  const box = document.getElementById("lyraBox").getBoundingClientRect();
+  const caixa = document.getElementById("lyraBox");
+  const box = caixa.getBoundingClientRect();
   const r = tk.getBoundingClientRect();
   const larg = b.offsetWidth, alt = b.offsetHeight;
+
+  //  Com o menu fixo, a área livre começa onde ele termina. Sem
+  //  isto o balão de um acorde no começo da linha era empurrado
+  //  para a esquerda e acabava por cima do menu.
+  const menu = caixa.classList.contains("op-fixo")
+    ? (document.getElementById("opPainel")?.getBoundingClientRect().width || 0)
+    : 0;
+
   let x = r.left - box.left + r.width / 2 - larg / 2;
-  x = Math.max(8, Math.min(x, box.width - larg - 8));
+  x = Math.max(menu + 8, Math.min(x, box.width - larg - 8));
   let y = r.top - box.top - alt - 8;
   if (y < 8) y = r.bottom - box.top + 8;        // não cabe em cima: vai pra baixo
   b.style.left = x + "px";
@@ -935,6 +987,13 @@ if (AC_TEM_HOVER) {
   // sair da janela fecha na hora
   document.addEventListener("mouseleave", () => { cancelar(); ultimo = null; acEsconderBalao(); });
   document.addEventListener("scroll", () => { cancelar(); ultimo = null; acEsconderBalao(); }, true);
+}
+
+//  Sem hover não há o laço acima, mas rolar precisa recolher o
+//  balão do mesmo jeito — senão ele fica flutuando sobre o texto.
+if (!AC_TEM_HOVER) {
+  document.addEventListener("scroll", acEsconderBalao, true);
+  window.addEventListener("resize", acEsconderBalao);
   window.addEventListener("resize", () => { cancelar(); ultimo = null; acEsconderBalao(); });
 }
 

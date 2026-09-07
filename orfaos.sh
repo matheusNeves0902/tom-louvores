@@ -34,9 +34,17 @@ for f in *; do
     continue
   fi
 
-  citado=$(grep -l -F -- "$f" *.html *.css *.js *.json 2>/dev/null | grep -v "^$f$" | tr '\n' ' ')
+  #  O sw.js guarda arquivos, não os usa. Contá-lo como uso fazia
+  #  um arquivo esquecido no cache parecer necessário — foi assim
+  #  que o logo.png passou batido em duas limpezas.
+  citado=$(grep -l -F -- "$f" *.html *.css *.js *.json 2>/dev/null |
+           grep -v "^$f$" | grep -v "^sw\.js$" | tr '\n' ' ')
+  noCache=$(grep -q "\"\./$f\"" sw.js 2>/dev/null && echo sim || echo nao)
 
-  if [ -z "$citado" ]; then
+  if [ -z "$citado" ] && [ "$noCache" = "sim" ]; then
+    printf '  \033[33mSÓ NO CACHE\033[0m %s — está no sw.js mas nenhuma página usa\n' "$f"
+    semUso="$semUso $f"
+  elif [ -z "$citado" ]; then
     printf '  \033[31mSEM USO \033[0m %s\n' "$f"
     semUso="$semUso $f"
   else

@@ -35,6 +35,17 @@ const opEhCelular = () => OP_MQ.matches;
   .lyra-box.op-fixo #opFundo{display:none !important}
   .lyra-box.op-fixo .op-painel{transform:none;box-shadow:none}
 
+  /*  A largura do menu vira uma medida só, em vez de 320px
+      repetido em quatro arquivos. Vinte por cento da tela, com
+      piso e teto: numa tela larga ele não vira um corredor
+      gigante, e numa apertada não some. */
+  :root{
+    /*  O piso é 320px porque é a largura em que "Rolagem
+        automática" cabe na mesma linha do controle — foi a medida
+        que funcionou desde o começo. Abaixo disso o texto quebra. */
+    --op-menu: clamp(320px, 20vw, 380px);
+  }
+
   /* ── barra do leitor ──
      O style.css manda o grupo e o segmento esticarem, porque
      antes eles dividiam a barra com tom, tema e quebra de linha.
@@ -77,7 +88,7 @@ const opEhCelular = () => OP_MQ.matches;
     .lyra-box.op-aberto .lyra-hd,
     .lyra-box.op-aberto .lyra-barra,
     .lyra-box.op-aberto .lyra-corpo{
-      margin-left:320px;margin-right:0;
+      margin-left:var(--op-menu);margin-right:0;
       max-width:none;width:auto;
       padding-left:26px;padding-right:26px;
     }
@@ -85,6 +96,7 @@ const opEhCelular = () => OP_MQ.matches;
 
   /* ── painel ── */
   .op-painel{
+    container:op / inline-size;
     position:absolute;z-index:70;
     background:#131313;
     display:flex;flex-direction:column;
@@ -95,7 +107,7 @@ const opEhCelular = () => OP_MQ.matches;
 
   /* computador: entra pela esquerda */
   .op-painel{
-    left:0;top:0;bottom:0;width:320px;
+    left:0;top:0;bottom:0;width:var(--op-menu);
     border-right:1px solid var(--gray3);
     transform:translateX(-101%);
     padding:18px 16px calc(20px + env(safe-area-inset-bottom));
@@ -168,7 +180,7 @@ const opEhCelular = () => OP_MQ.matches;
   }
   .op-nome{
     font-family:'Inter',sans-serif;font-size:14px;font-weight:500;
-    color:#e8e8e8;flex:1;min-width:0;
+    color:#e8e8e8;flex:1;min-width:0;line-height:1.3;
   }
   .claro .op-nome{color:#20232b}
   .op-valor{
@@ -176,6 +188,33 @@ const opEhCelular = () => OP_MQ.matches;
     color:var(--gray);flex-shrink:0;
   }
   .op-controle{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+  /*  Numa coluna de 250px o rótulo e o controle não cabem lado a
+      lado: "Rolagem automática" quebrava em três linhas e ainda
+      ficava por baixo do botão. Abaixo de 340px de menu a linha
+      empilha — nome em cima, controle embaixo, alinhado à direita. */
+  /*  Atenção ao número: a consulta mede a área interna do painel,
+      já sem o preenchimento. Um menu de 320px tem 286px por dentro,
+      então um limite de 292px pegava o menu inteiro e empilhava
+      tudo à toa, deixando cada linha com 88px de altura. */
+  @container op (max-width: 250px){
+    .op-linha{
+      /* duas colunas: ícone estreito e o resto.
+         O nome fica ao lado do ícone; o controle desce para a
+         segunda faixa, alinhado à direita. Sem isto o ícone caía
+         sozinho numa linha e cada item virava um bloco de 130px. */
+      display:grid;
+      grid-template-columns:26px 1fr;
+      column-gap:12px;row-gap:6px;
+      padding:11px 14px;
+    }
+    .op-ico{grid-column:1;grid-row:1;align-self:center}
+    .op-nome{grid-column:2;grid-row:1}
+    .op-valor{grid-column:2;grid-row:2;justify-self:end;margin:0}
+    .op-controle{grid-column:2;grid-row:2;justify-self:end}
+    /* quando há valor escrito e controle, os dois dividem a faixa */
+    .op-linha:has(.op-valor) .op-controle{grid-row:2}
+  }
   .op-controle .lyra-btn{height:34px;min-width:38px}
   .op-controle .lyra-seg button{height:34px;padding:0 12px;font-size:12px}
   .op-controle .lyra-pct{line-height:34px;min-width:46px}
