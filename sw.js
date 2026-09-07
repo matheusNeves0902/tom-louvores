@@ -13,7 +13,7 @@
 //      cache como rede de segurança quando ela falha
 // ============================================================
 
-const CACHE = "tom-louvores-v8";
+const CACHE = "tom-louvores-v9";
 
 const APP = [
   "./",
@@ -50,10 +50,20 @@ const APP = [
 self.addEventListener("install", e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
-    // um a um: se um arquivo faltar, os outros ainda entram
-    await Promise.all(APP.map(u => c.add(u).catch(() => {})));
+    //  cache:"reload" força ir à rede de verdade. Sem isso, o
+    //  navegador entrega do cache HTTP dele e a versão "nova" que
+    //  entra no pacote é a antiga — o app trocava de cache e
+    //  continuava rodando o mesmo código.
+    await Promise.all(APP.map(u =>
+      c.add(new Request(u, { cache: "reload" })).catch(() => {})));
     self.skipWaiting();
   })());
+});
+
+//  A página pede para a versão nova assumir sem esperar o próximo
+//  lançamento. Só então ela recarrega, já com o código novo.
+self.addEventListener("message", e => {
+  if (e.data && e.data.acao === "assumir") self.skipWaiting();
 });
 
 self.addEventListener("activate", e => {
@@ -104,8 +114,28 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  //  O app: entrega o que está guardado na hora e busca a versão
-  //  nova por trás, para a próxima abertura já vir atualizada.
+  //  A PÁGINA em si tenta a rede primeiro. Com o cache na frente,
+  //  o app instalado abria sempre a versão guardada e só trocava de
+  //  código no segundo lançamento — foi por isso que o recarregar
+  //  depois de baixar não funcionava no app, mas funcionava no
+  //  navegador. A cópia guardada continua valendo quando falta rede.
+  if (req.mode === "navigate" || url.pathname.endsWith(".html")) {
+    e.respondWith((async () => {
+      try {
+        const r = await fetch(req);
+        if (r.ok) (await caches.open(CACHE)).put(req, r.clone());
+        return r;
+      } catch {
+        return (await caches.match(req)) ||
+               (await caches.match("./index.html")) ||
+               new Response("sem conexão", { status: 503 });
+      }
+    })());
+    return;
+  }
+
+  //  Os demais arquivos do app: entrega o guardado na hora e busca
+  //  a versão nova por trás, para a próxima abertura já vir nova.
   if (url.origin === location.origin) {
     e.respondWith((async () => {
       const c = await caches.match(req);

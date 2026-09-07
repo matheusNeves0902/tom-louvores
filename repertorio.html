@@ -298,9 +298,41 @@
 <script src="paginas.js"></script>
 <script src="atualizar.js"></script>
 <script>
-// guarda o app no aparelho: abre instantâneo e funciona sem internet
+// Guarda o app no aparelho: abre instantâneo e funciona sem internet.
+//
+// E troca de versão sozinho. Sem isto, o app instalado só passava a
+// rodar o código novo no segundo lançamento — quem tinha o atalho na
+// tela de início ficava uma sessão inteira para trás.
 if ("serviceWorker" in navigator) {
-  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  addEventListener("load", async () => {
+    try {
+      const reg = await navigator.serviceWorker.register("sw.js");
+
+      // uma recarga só, para não entrar em laço
+      let jaTrocou = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (jaTrocou) return;
+        jaTrocou = true;
+        location.reload();
+      });
+
+      // versão nova esperando: assume assim que estiver pronta
+      reg.addEventListener("updatefound", () => {
+        const novo = reg.installing;
+        if (!novo) return;
+        novo.addEventListener("statechange", () => {
+          if (novo.state === "installed" && navigator.serviceWorker.controller) {
+            novo.postMessage({ acao: "assumir" });
+          }
+        });
+      });
+
+      // procura versão nova ao voltar para o app
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) reg.update().catch(() => {});
+      });
+    } catch (e) { /* sem service worker: o app funciona igual, só não offline */ }
+  });
 }
 </script>
 </body>
