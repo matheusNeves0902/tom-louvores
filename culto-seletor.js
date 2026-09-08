@@ -411,7 +411,7 @@ const CULTO_HORARIOS = {
   
   // A janela vira sozinha: quem deixa o site aberto durante o culto
   // vê a escala trocar na hora certa, sem recarregar. Só age quando
-  // a pessoa não escolheu um culto na mão.
+  // a pessoa não escolheu um culto na mão
   let cultoEscolhaManual = false;
   
   const cultoTrocaOriginal = cultoAplicarSelecao;
